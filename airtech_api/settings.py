@@ -14,6 +14,7 @@ import os
 import dj_database_url
 from dotenv import load_dotenv
 load_dotenv()
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -72,10 +73,10 @@ WSGI_APPLICATION = 'airtech_api.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
-
 DATABASES = {
-    'default': dj_database_url.parse(
-        os.getenv('DATABASE_URI'), conn_max_age=600)
+    'default':
+    dj_database_url.parse(
+        os.getenv('DATABASE_URI', 'hbuibu'), conn_max_age=600)
 }
 
 # Password validation
@@ -121,5 +122,6 @@ STATIC_URL = '/static/'
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS':
     'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 10,
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json'
 }

@@ -12,6 +12,7 @@ dj-database-url = "*"
 python-dotenv = "*"
 mixer = "*"
 pytest-cov = "*"
+pytest-django = "*"
 
 [dev-packages]
 yapf = "*"
