@@ -10,7 +10,7 @@ then
     exit 0
 fi
 
-echo "Running Linting with yapf"
+echo "Running Linting with yapf..."
 yapf -ir ${PYTHON_FILES[*]}
 
 
@@ -19,10 +19,12 @@ CHANGED_FILES=$( git diff --name-only ${PYTHON_FILES[*]} )
 if [ "${CHANGED_FILES[*]}" == "" ];
 then
     echo "Linting did not correct any files"
+    echo "Linting checks successful"
+    echo "Opening commit window..."
     exit 0
 else
-    echo "Some changes were made to your file"
-    echo "Check them out and try the commit again"
+    echo "Some changes were made to your file!"
+    echo "Check them out and try the commit again!"
     exit 1
 fi
 
