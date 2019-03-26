@@ -1,0 +1,61 @@
+version: 2 # use CircleCI 2.0
+
+restore_cache: &run_restore_cache
+  restore_cache:
+    # Read about caching dependencies: https://circleci.com/docs/2.0/caching/
+    key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+
+install_dependencies: &install_dependencies
+  name: Install Pipenv Dependencies
+  command: |
+    sudo pip install pipenv
+    pipenv install
+
+save_cache: &save_cache # cache Python dependencies using checksum of Pipfile as the cache-key
+    key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+    paths:
+      - ".venv"
+      - "/usr/local/bin"
+
+run_tests: &run_tests
+  command: |
+    pipenv run pytest
+
+setup_codeclimate: &setup_codeclimate
+
+  name: Setup Code Climate test-reporter
+  command: |
+    curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+    chmod +x ./cc-test-reporter
+
+generate_coverage_report: &generate_coverage_report
+  name: contains code coverage report
+  command: |
+    ./cc-test-reporter before-build
+    pipenv run pytest --cov=airtech_api --cov-report xml
+    ./cc-test-reporter after-build
+
+
+jobs: # A basic unit of work in a run
+  build:
+    working_directory: ~/repo
+    docker: # run the steps with Docker
+      # CircleCI Python images available at: https://hub.docker.com/r/circleci/python/
+      - image: circleci/python:3.7.0
+        environment: # environment variables for primary container
+          PIPENV_VENV_IN_PROJECT: true
+          DATABASE_URI: $DATABASE_URI
+          SECRET_KEY: $SECRET_KEY
+          CC_TEST_REPORTER_ID: $CC_TEST_REPORTER_ID
+      # CircleCI PostgreSQL images available at: https://hub.docker.com/r/circleci/postgres/
+      - image: circleci/postgres:10.4
+    steps: # steps that comprise the `build` job
+      - checkout # check out source code to working directory
+      - run: sudo chown -R circleci:circleci /usr/local/bin
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
+      - *run_restore_cache
+      - run: *install_dependencies
+      - save_cache: *save_cache
+      - run: *run_tests
+      - run: *setup_codeclimate
+      - run: *generate_coverage_report

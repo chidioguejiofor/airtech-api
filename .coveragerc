@@ -1,0 +1,6 @@
+[run]
+branch = True
+omit =
+    *wsgi.py
+    *apps.py
+    *admin.py
