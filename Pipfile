@@ -4,9 +4,17 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-yapf = "*"
+django = "*"
+djangorestframework = "*"
+dj-database-url = "*"
+"psycopg2" = "*"
+"psycopg2-binary" = "*"
+python-dotenv = "*"
+mixer = "*"
+pytest-cov = "*"
 
 [dev-packages]
+yapf = "*"
 
 [requires]
 python_version = "3.7"
