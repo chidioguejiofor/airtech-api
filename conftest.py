@@ -23,3 +23,15 @@ def valid_user_two():
         "gender": "female",
         "password": "password"
     }
+
+
+@pytest.fixture(scope='module')
+def valid_user_three():
+    return {
+        "username": "newUserThree",
+        "first_name": "Fred",
+        "last_name": "John",
+        "email": "chid1112@email.com",
+        "gender": "male",
+        "password": "password"
+    }
