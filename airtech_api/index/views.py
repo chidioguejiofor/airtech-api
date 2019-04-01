@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from airtech_api.utils.success_messages import index_route
+from airtech_api.utils import success_messages
 from airtech_api.utils.error_messages import (not_found_errors)
 
 
@@ -13,4 +13,4 @@ def catch_all(request):
 
 @api_view(['GET', 'POST', 'PATCH', 'DELETE', 'PUT'])
 def welcome_message(request):
-    return Response({'message': index_route['welcome_message']})
+    return Response({'message': success_messages['welcome_message']})

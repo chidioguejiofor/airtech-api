@@ -1,30 +1,9 @@
-from ..utils.success_messages import signup_route
-from ..utils.error_messages import serialization_errors
-from ..utils.constants import FIELD_IS_REQUIRED_STR
-from .models import User
-from django.db.utils import IntegrityError
-
+# Third Party Libraries
 import pytest
 
-
-@pytest.mark.django_db
-class TestUserModel:
-    def test_save_user_to_db_succeeds(self, valid_user_one):
-        model = User(**valid_user_one)
-        model.save()
-        assert valid_user_one['username'] == model.username
-        assert valid_user_one['first_name'] == model.first_name
-        assert valid_user_one['last_name'] == model.last_name
-        assert valid_user_one['gender'] == model.gender
-        assert valid_user_one['username'] == model.username
-
-    def test_save_existing_user_fails(self, valid_user_two):
-        model = User(**valid_user_two)
-        model.save()  # saves the user to db
-        model = User(**valid_user_two)
-
-        with pytest.raises(IntegrityError):
-            model.save()  # should fail here
+from airtech_api.utils import success_messages
+from airtech_api.utils.error_messages import serialization_errors
+from airtech_api.utils.constants import FIELD_IS_REQUIRED_STR
 
 
 @pytest.mark.django_db
@@ -107,8 +86,7 @@ class TestSignupRoute:
             "gender": "female",
             "password": "password"
         }
-        # import pdb;
-        # pdb.set_trace()
+
         response = client.post(
             '/api/v1/signup', data=valid_data, content_type="application/json")
         response_body = response.data
@@ -116,8 +94,10 @@ class TestSignupRoute:
 
         assert response.status_code == 201
         assert response_body['status'] == 'success'
-        assert response_body['message'] == signup_route['signup_success']
+        assert response_body['message'] == success_messages[
+            'auth_successful'].format("Sign Up")
         assert 'id' in data
+        assert 'token' in data
         assert 'createdAt' in data
         assert 'updatedAt' in data
         assert 'password' not in data

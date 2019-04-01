@@ -1,8 +1,28 @@
 from rest_framework import serializers
+from rest_framework.status import HTTP_404_NOT_FOUND
 from ..utils.helpers.serializer_helpers import get_unique_validator
 from .models import User
 from ..utils.helpers.json_helpers import raise_error
 from ..utils.error_messages import serialization_errors
+
+
+class LoginSerializer(serializers.Serializer):
+    usernameOrEmail = serializers.CharField()
+    password = serializers.CharField()
+
+    def validate(self, data):
+        email_or_name = data['usernameOrEmail']
+        if email_or_name.count('@') >= 1:
+            user = User.objects.filter(email=email_or_name).first()
+        else:
+            user = User.objects.filter(username=email_or_name).first()
+
+        if user and user.verify_password(data['password']):
+            return user
+        raise_error(
+            'The user with that username/email and password combination was not found',
+            status_code=HTTP_404_NOT_FOUND,
+            raise_only_message=True)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -13,11 +33,10 @@ class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(validators=[
         get_unique_validator(User, 'username'),
     ])
+
     email = serializers.EmailField(validators=[
         get_unique_validator(User, 'email'),
     ])
-
-    # gender = EnumChoiceField(enum_class=GenderEnum)
 
     class Meta:
         model = User
@@ -31,7 +50,8 @@ class UserSerializer(serializers.ModelSerializer):
         elif gender_str in ['female', 'f']:
             return 'Female'
 
-        raise raise_error(serialization_errors['invalid_gender'])
+        raise raise_error(
+            serialization_errors['invalid_gender'], raise_only_message=True)
 
     def create(self, validated_data):
         return User.objects.create(**validated_data)

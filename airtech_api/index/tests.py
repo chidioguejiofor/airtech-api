@@ -1,6 +1,6 @@
 # from rest_framework import status
 import pytest
-from airtech_api.utils.success_messages import index_route
+from airtech_api.utils import success_messages
 from airtech_api.utils.error_messages import not_found_errors
 
 # Create your tests here.
@@ -21,7 +21,7 @@ class TestIndexRoute:
         response = client.get('/api')
         data = response.data
         assert response.status_code == 200
-        assert data['message'] == index_route['welcome_message']
+        assert data['message'] == success_messages['welcome_message']
 
     def test_invalid_route_fails(self, client):
         """Should fail when the specified route is invalid
