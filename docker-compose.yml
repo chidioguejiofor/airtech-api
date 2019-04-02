@@ -1,0 +1,46 @@
+version: "3"
+
+services:
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_DB=airtech_docker_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - ./airtech-api-db:/var/lib/postgresql/data
+    networks:
+      - webnet
+    ports:
+      - '5433:5432'
+  api:
+
+#   To build the dockerfile from the image uncomment the image key above and comment the build below
+    build:
+      context: ./
+      dockerfile: docker/Dockerfile
+
+    deploy:
+      replicas: 5
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 50M
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "80:7000"
+    networks:
+      - webnet
+    depends_on:
+      - db
+    volumes:
+      - .:/airtech-api
+    environment:
+      DATABASE_URI: postgres://postgres:password@db:5432/airtech_docker_db
+
+networks:
+  webnet:
+

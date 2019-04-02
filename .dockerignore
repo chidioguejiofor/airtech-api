@@ -1,9 +1,7 @@
-.idea
-.env
-htmlcov
-
 airtech-api
 airtech-api-db
-
+.idea
+htmlcov
 .coverage*
 **/*/__pycache__
+
