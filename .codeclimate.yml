@@ -2,3 +2,4 @@ exclude_patterns:
   - "*/**/test_*.py"
   - "*/**/*tests.py"
   - "manage.py"
+  - "*/**/wsgi.py"

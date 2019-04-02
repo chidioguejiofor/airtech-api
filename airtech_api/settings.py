@@ -73,7 +73,7 @@ WSGI_APPLICATION = 'airtech_api.wsgi.application'
 DATABASES = {
     'default':
     dj_database_url.parse(
-        os.getenv('DATABASE_URI', 'hbuibu'), conn_max_age=600)
+        os.getenv('DATABASE_URI'), conn_max_age=600)
 }
 
 # Password validation
