@@ -2,12 +2,10 @@
 
 from rest_framework.views import APIView
 from .serializers import UserSerializer, LoginSerializer
-from ..utils.helpers.json_helpers import generate_response, raise_error, clean_up_user_data
+from ..utils.helpers.json_helpers import generate_response, raise_error, add_token_to_response
 from ..utils import success_messages
 from ..utils.error_messages import serialization_errors
 from rest_framework.status import HTTP_201_CREATED, HTTP_200_OK, HTTP_404_NOT_FOUND
-import jwt
-import os
 
 
 class SignupView(APIView):
@@ -24,7 +22,7 @@ class SignupView(APIView):
         if serializer.is_valid():
             _ = serializer.save()
 
-            serialization_data = clean_up_user_data(serializer.data)
+            serialization_data = add_token_to_response(serializer.data)
 
             return generate_response(
                 serialization_data,
@@ -50,7 +48,7 @@ class LoginView(APIView):
         if serializer.is_valid(raise_exception=False):
             user = serializer.validated_data
             serialized_user = UserSerializer(user).data
-            serialization_data = clean_up_user_data(serialized_user)
+            serialization_data = add_token_to_response(serialized_user)
 
             return generate_response(
                 serialization_data,

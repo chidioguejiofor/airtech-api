@@ -12,6 +12,12 @@ Run the following commands:
 - Make bash scripts executable via: ` chmod +x hooks/install_hooks.sh hooks/pre_commit.sh`
 - Install hooks by running: `hooks/install_hooks.sh`
 
+## Linting Automation
+The app is configured to automatically lint your files once you do a `git commit`. However you can decide to lint all 
+python files by running `yapf -ir $(find . -name '*.py')`. 
+Linting follows the [PE8 Style Guide](https://www.python.org/dev/peps/pep-0008/)
+
+
 ## Starting the app
 In order to start the app locally, run `python manage.py runserver`. 
 You can test the endpoints in the postman documentation  here [![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/2ed3253e6a165822c4c6)

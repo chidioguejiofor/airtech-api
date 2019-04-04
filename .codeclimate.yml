@@ -3,3 +3,5 @@ exclude_patterns:
   - "*/**/*tests.py"
   - "manage.py"
   - "*/**/wsgi.py"
+  - "*/**/migrations/*"
+  - "conftest.py"

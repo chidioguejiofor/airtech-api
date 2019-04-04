@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     'rest_framework', 'django.contrib.admin', 'django.contrib.auth',
     'django.contrib.contenttypes', 'django.contrib.sessions',
     'django.contrib.messages', 'django.contrib.staticfiles',
-    'airtech_api.users', 'airtech_api.utils'
+    'airtech_api.users', 'airtech_api.utils', 'airtech_api.flight'
 ]
 
 MIDDLEWARE = [
@@ -71,8 +71,7 @@ WSGI_APPLICATION = 'airtech_api.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 DATABASES = {
-    'default':
-    dj_database_url.parse(
+    'default': dj_database_url.parse(
         os.getenv('DATABASE_URI'), conn_max_age=600)
 }
 
@@ -120,5 +119,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS':
     'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
-    'TEST_REQUEST_DEFAULT_FORMAT': 'json'
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+    'DEFAULT_MODEL_SERIALIZER_CLASS':
+    'drf_toolbox.serializers.ModelSerializer',
 }
