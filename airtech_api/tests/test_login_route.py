@@ -44,6 +44,8 @@ class TestLoginRoute:
     def test_login_with_valid_data_succeeds(self, client, valid_user_three):
         """Should succeed when the valid credentials are passed
 
+        Args:
+            client (fixture): a pytest fixture that is used to make HTTP Requests
         Returns:
             None
         """
@@ -64,8 +66,6 @@ class TestLoginRoute:
         assert response_body['message'] == success_messages[
             'auth_successful'].format("Login")
         assert 'id' in data
-        assert 'createdAt' in data
-        assert 'updatedAt' in data
         assert 'token' in data
         assert 'password' not in data
         assert data['gender'].lower() == valid_user_three['gender']

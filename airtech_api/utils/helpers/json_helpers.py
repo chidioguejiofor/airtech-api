@@ -3,6 +3,7 @@ import jwt
 from rest_framework.response import Response
 from rest_framework import serializers
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+from datetime import datetime, timedelta
 
 
 def generate_response(response_data, message, status_code=HTTP_200_OK):
@@ -30,7 +31,7 @@ def raise_error(message,
     raise api_exception
 
 
-def clean_up_user_data(user_data):
+def add_token_to_response(user_data):
     """Clean up response sent to users
 
     Removes password field and adds token to user data
@@ -41,9 +42,12 @@ def clean_up_user_data(user_data):
     Returns:
 
     """
-    del user_data['password']
+    token_data = {
+        'id': user_data['id'],
+        'username': user_data['username'],
+        'email': user_data['email'],
+        'exp': datetime.utcnow() + timedelta(weeks=1)
+    }
     user_data['token'] = jwt.encode(
-        user_data,
-        os.getenv('JWT_SCRET_KEY'),
-    )
+        token_data, os.getenv('JWT_SCRET_KEY'), algorithm='HS256')
     return user_data

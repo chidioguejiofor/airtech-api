@@ -28,7 +28,7 @@ class LoginSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     firstName = serializers.CharField(source='first_name', required=True)
     lastName = serializers.CharField(source='last_name', required=True)
-    password = serializers.CharField()
+    password = serializers.CharField(write_only=True)
     gender = serializers.CharField()
     username = serializers.CharField(validators=[
         get_unique_validator(User, 'username'),
@@ -41,7 +41,8 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'firstName', 'gender', 'lastName', 'email', 'username',
-                  'createdAt', 'updatedAt', 'password')
+                  'password')
+        extra_kwargs = {'password': {'write_only': True}}
 
     def validate_gender(self, validated_data):
         gender_str = validated_data.lower()

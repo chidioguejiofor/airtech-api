@@ -98,8 +98,6 @@ class TestSignupRoute:
             'auth_successful'].format("Sign Up")
         assert 'id' in data
         assert 'token' in data
-        assert 'createdAt' in data
-        assert 'updatedAt' in data
         assert 'password' not in data
         assert data['gender'].lower() == 'female'
         assert data['firstName'] == valid_data['firstName']
