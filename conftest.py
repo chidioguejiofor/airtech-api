@@ -2,6 +2,9 @@ import pytest
 from airtech_api.users.models import User
 from airtech_api.utils.helpers.json_helpers import add_token_to_response
 
+from django.utils import timezone
+from datetime import timedelta
+
 
 @pytest.fixture(scope='module')
 def valid_user_one():
@@ -45,7 +48,7 @@ def valid_flight_one():
         "capacity": 70,
         "location": "Popo York",
         "destination": "Lagos, Nigeria",
-        "schedule": "2017-10-10 14:00:01",
+        "schedule": timezone.now() + timedelta(days=30),
         "amount": 4000.70,
         "type": "international"
     }

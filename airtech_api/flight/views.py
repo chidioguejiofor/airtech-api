@@ -1,18 +1,23 @@
 from rest_framework.views import APIView
 from rest_framework.status import HTTP_201_CREATED
-from ..utils.helpers.json_helpers import generate_response, raise_error
+from ..utils.helpers.json_helpers import (generate_response, raise_error,
+                                          generate_pagination_meta,
+                                          parse_paginator_request_query)
 from .serializers import FlightSerializer
 from ..utils.error_messages import serialization_errors
-from ..utils.validators.token_validator import AdminTokenvalidator
+from ..utils.validators.token_validator import AdminTokenValidator
 from ..utils import success_messages
+from .models import Flight
 
 
 class FlightView(APIView):
 
-    permission_classes = [AdminTokenvalidator]
-    protected_methods = ['POST']
+    permission_classes = [AdminTokenValidator]
+    protected_methods = ['POST', 'GET']
+    regular_user_methods = ['GET']
 
-    def post(self, request, format='json'):
+    @staticmethod
+    def post(request, format='json'):
         """Creates a new flight
 
         Args:
@@ -37,3 +42,18 @@ class FlightView(APIView):
         raise_error(
             serialization_errors['many_invalid_fields'],
             err_dict=serializer.errors)
+
+    @staticmethod
+    def get(request, format='json'):
+        queryset = Flight.objects.order_by('-schedule')
+        paginator, page = parse_paginator_request_query(
+            request.query_params, queryset)
+        meta, current_page_data = generate_pagination_meta(paginator, page)
+        paginated_data = FlightSerializer(current_page_data, many=True).data
+
+        paginated_response = generate_response(
+            paginated_data,
+            success_messages['retrieved'].format('Flights'),
+            meta=meta)
+
+        return paginated_response

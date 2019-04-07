@@ -1,7 +1,8 @@
 import pytest
 
 from airtech_api.utils import success_messages
-from airtech_api.utils.error_messages import tokenization_errors
+from airtech_api.utils.error_messages import tokenization_errors, serialization_errors
+from datetime import datetime, timedelta
 
 
 @pytest.mark.django_db
@@ -39,7 +40,7 @@ class TestFlightRoute:
         assert response_data['destination'] == valid_flight_one['destination']
         assert float(response_data['amount']) == valid_flight_one['amount']
         assert response_data['type'] == valid_flight_one['type']
-        assert response_data['updatedAt'] == None
+        assert response_data['updatedAt'] is None
 
         # Assert Creator values
         assert response_data['creator']['id'] == str(
@@ -52,7 +53,29 @@ class TestFlightRoute:
             'gender'] == saved_valid_admin_user_model_one.gender
 
         # Assert that the user is admin
-        saved_valid_admin_user_model_one.admin == True
+        assert saved_valid_admin_user_model_one.admin is True
+
+    def test_create_flight_with_schedule_less_than_now_fails(
+            self, client, valid_flight_one, valid_admin_user_token,
+            saved_valid_admin_user_model_one):
+
+        invalid_schedule_dict = dict(**valid_flight_one)
+        invalid_schedule_dict['schedule'] = datetime.now() - timedelta(days=1)
+        response = client.post(
+            '/api/v1/flight',
+            data=invalid_schedule_dict,
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer {}'.format(valid_admin_user_token),
+        )
+        response_body = response.data
+
+        assert response.status_code == 400
+        assert response_body['status'] == 'error'
+
+        assert response_body['message'] == serialization_errors[
+            'many_invalid_fields']
+        assert response_body['errors']['schedule'][0] == serialization_errors[
+            'invalid_flight_schedule']
 
     def test_create_flight_with_missing_header_fails(self, client,
                                                      valid_flight_one):
@@ -102,3 +125,61 @@ class TestFlightRoute:
         assert response_body['status'] == 'error'
         assert response_body['message'] == tokenization_errors[
             'user_is_forbidden']
+
+    def test_get_all_flights_with_valid_token_succeeds(self, client,
+                                                       valid_user_one_token):
+
+        response = client.get(
+            '/api/v1/flight',
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer {}'.format(valid_user_one_token),
+        )
+
+        response_body = response.data
+        response_data = response_body['data']
+        meta = response_body['meta']
+        assert response.status_code == 200
+        assert response_body['status'] == 'success'
+        assert response_body['message'] == success_messages[
+            'retrieved'].format('Flights')
+        assert isinstance(response_data, list)
+        assert isinstance(response_body['meta'], dict)
+        assert meta['currentPage'] == 1
+        assert meta['previousPageNumber'] is None
+        assert meta['itemsPerPage'] == 10
+
+    def test_get_all_flights_with_valid_admin_token_succeeds(
+            self, client, valid_admin_user_token):
+
+        response = client.get(
+            '/api/v1/flight',
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer {}'.format(valid_admin_user_token),
+        )
+
+        response_body = response.data
+        response_data = response_body['data']
+        meta = response_body['meta']
+        assert response.status_code == 200
+        assert response_body['status'] == 'success'
+        assert response_body['message'] == success_messages[
+            'retrieved'].format('Flights')
+        assert isinstance(response_data, list)
+        assert isinstance(response_body['meta'], dict)
+        assert meta['currentPage'] == 1
+        assert meta['previousPageNumber'] is None
+        assert meta['itemsPerPage'] == 10
+
+    def test_get_all_with_invalid_token_fails(self, client):
+        response = client.get(
+            '/api/v1/flight',
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer {}'.format('invalid-token'),
+        )
+
+        response_body = response.data
+
+        assert response.status_code == 401  # unauthorized
+        assert response_body['status'] == 'error'
+        assert response_body['message'] == tokenization_errors[
+            'token_is_invalid']
