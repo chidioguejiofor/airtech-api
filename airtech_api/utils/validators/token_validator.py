@@ -36,7 +36,7 @@ class TokenValidator(BasePermission):
 
         user = User.objects.filter(id=data.get('id', '')).first()
 
-        if not self.is_user_valid(user):
+        if not self.is_user_valid(user, request, view):
             raise_error(
                 self.validation_error_message,
                 status_code=self.validation_status_code)
@@ -45,7 +45,8 @@ class TokenValidator(BasePermission):
 
         return True
 
-    def decode_token(self, token):
+    @staticmethod
+    def decode_token(token):
         """Decodes a token sent by the user
 
         Args:
@@ -69,7 +70,7 @@ class TokenValidator(BasePermission):
                 tokenization_errors['token_is_invalid'],
                 status_code=HTTP_401_UNAUTHORIZED)
 
-    def is_user_valid(self, user):
+    def is_user_valid(self, user, request, view):
         """Checks if the user is valid
 
         Returns True if the user is valid or False if the user is not
@@ -78,6 +79,8 @@ class TokenValidator(BasePermission):
 
         Args:
             user (User): The user model to be tested
+            request (Request): An object containing the user request
+            view (View): The current view
 
         Returns:
             True when the user is object is valid or False if it is not
@@ -85,19 +88,23 @@ class TokenValidator(BasePermission):
         return user
 
 
-class AdminTokenvalidator(TokenValidator):
+class AdminTokenValidator(TokenValidator):
     validation_error_message = tokenization_errors['user_is_forbidden']
     validation_status_code = HTTP_403_FORBIDDEN
 
-    def is_user_valid(self, user):
+    def is_user_valid(self, user, request, view):
         """Checks if the user is and admin
 
         Note that all subclasses of the TokenValidator must override this method to suit their needs
 
         Args:
             user (User): The user model to be tested
+            request (Request): An object containing the user request
+            view (View): The current view
 
         Returns:
             True when the user is an admin
         """
+        if request.method in view.regular_user_methods:
+            return super().is_user_valid(user, request, view)
         return user and user.admin is True
