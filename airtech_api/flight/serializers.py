@@ -5,21 +5,24 @@ from ..utils.error_messages import serialization_errors
 from ..users.serializers import UserSerializer
 
 from django.utils import timezone
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 
 class FlightSerializer(serializers.ModelSerializer):
+    capacity = serializers.IntegerField(min_value=1)
     type = serializers.CharField()
-    creator = UserSerializer(source='createdBy', read_only=True)
-    amount = serializers.DecimalField(decimal_places=2, max_digits=100)
-    createdAt = serializers.DateTimeField(required=False)
+    creator = UserSerializer(source='created_by', read_only=True)
+    currentPrice = serializers.DecimalField(
+        min_value=1, decimal_places=2, max_digits=100)
+    createdAt = serializers.DateTimeField(source='created_at', required=False)
+    updatedAt = serializers.DateTimeField(source='updated_at', required=False)
 
     class Meta:
         model = Flight
         fields = ('id', 'capacity', 'location', 'destination', 'schedule',
-                  'amount', 'type', 'creator', 'createdBy', 'createdAt',
+                  'currentPrice', 'type', 'creator', 'created_by', 'createdAt',
                   'updatedAt')
-        extra_kwargs = {'createdBy': {'write_only': True}}
+        extra_kwargs = {'created_by': {'write_only': True}}
 
     def validate_type(self, validated_data):
         """Validates the flight type

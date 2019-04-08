@@ -1,5 +1,5 @@
 exclude_patterns:
-  - "tests"
+  - "tests/**/*.py"
   - "manage.py"
   - "*/**/wsgi.py"
   - "*/**/migrations/*"

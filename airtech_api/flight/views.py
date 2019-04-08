@@ -1,9 +1,8 @@
 from rest_framework.views import APIView
-from django.core.exceptions import ValidationError
 from rest_framework.status import HTTP_201_CREATED, HTTP_404_NOT_FOUND
-from ..utils.helpers.json_helpers import (generate_response, raise_error,
-                                          generate_pagination_meta,
-                                          parse_paginator_request_query)
+from ..utils.helpers.json_helpers import (
+    generate_response, raise_error, generate_pagination_meta,
+    parse_paginator_request_query, retrieve_model_with_id)
 from .serializers import FlightSerializer
 from ..utils.error_messages import serialization_errors
 from ..utils.validators.token_validator import AdminTokenValidator, TokenValidator
@@ -30,7 +29,7 @@ class FlightView(APIView):
 
         """
         user = request.decoded_user
-        request_data = dict(**request.data, createdBy=user.id)
+        request_data = dict(**request.data, created_by=user.id)
         serializer = FlightSerializer(data=request_data)
 
         if serializer.is_valid(raise_exception=False):
@@ -67,15 +66,9 @@ class SingleFlightView(APIView):
 
     @staticmethod
     def get(request, *args, **kwargs):
-
         flight_id = kwargs.get('id')
-        try:
-            flight = Flight.objects.filter(id=flight_id).first()
-            if not flight:
-                raise ValidationError('')
-        except ValidationError:
-            raise_error('Not found', status_code=HTTP_404_NOT_FOUND)
-
+        flight = retrieve_model_with_id(
+            Flight, flight_id, 'Not found', status_code=HTTP_404_NOT_FOUND)
         json_flight = FlightSerializer(flight).data
 
         return generate_response(

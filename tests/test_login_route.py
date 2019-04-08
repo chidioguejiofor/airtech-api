@@ -6,6 +6,8 @@ from airtech_api.users.models import User
 from airtech_api.utils.error_messages import serialization_errors
 from airtech_api.utils.constants import FIELD_IS_REQUIRED_STR
 
+from tests.mocks.users import valid_user_three
+
 
 @pytest.mark.django_db
 class TestLoginRoute:
@@ -41,7 +43,7 @@ class TestLoginRoute:
         assert errors['usernameOrEmail'][0] == FIELD_IS_REQUIRED_STR
         assert errors['password'][0] == FIELD_IS_REQUIRED_STR
 
-    def test_login_with_valid_data_succeeds(self, client, valid_user_three):
+    def test_login_with_valid_data_succeeds(self, client):
         """Should succeed when the valid credentials are passed
 
         Args:

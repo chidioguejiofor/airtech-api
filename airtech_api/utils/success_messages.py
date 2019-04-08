@@ -3,4 +3,5 @@ msg_dict = {
     'auth_successful': '{} Successful',
     'resource_created': '{} created successfully',
     'retrieved': 'Successfully retrieved {}',
+    'booking_success': 'You have successfully booked this Flight'
 }
