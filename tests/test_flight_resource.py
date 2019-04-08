@@ -2,11 +2,14 @@ import pytest
 
 from airtech_api.utils import success_messages
 from airtech_api.utils.error_messages import tokenization_errors, serialization_errors
+from airtech_api.flight.models import Flight
 from datetime import datetime, timedelta
 
 
 @pytest.mark.django_db
 class TestFlightRoute:
+
+    # POST
     def test_create_flight_with_valid_data_succeeds(
             self, client, valid_flight_one, valid_admin_user_token,
             saved_valid_admin_user_model_one):
@@ -126,6 +129,7 @@ class TestFlightRoute:
         assert response_body['message'] == tokenization_errors[
             'user_is_forbidden']
 
+    # GET ALL
     def test_get_all_flights_with_valid_token_succeeds(self, client,
                                                        valid_user_one_token):
 
@@ -179,6 +183,45 @@ class TestFlightRoute:
 
         response_body = response.data
 
+        assert response.status_code == 401  # unauthorized
+        assert response_body['status'] == 'error'
+        assert response_body['message'] == tokenization_errors[
+            'token_is_invalid']
+
+    def test_get_specific_flight_with_valid_id_succeeds(
+            self, client, valid_flight_one, saved_valid_admin_user_model_one,
+            valid_user_one_token):
+        model = Flight(
+            **valid_flight_one, createdBy=saved_valid_admin_user_model_one)
+        model.save()
+
+        response = client.get(
+            '/api/v1/flight/{}'.format(model.id),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer {}'.format(valid_user_one_token),
+        )
+
+        response_body = response.data
+        data = response_body['data']
+        assert response.status_code == 200
+        assert response_body['status'] == 'success'
+        assert response_body['message'] == success_messages[
+            'retrieved'].format('Flight')
+        assert data['id'] == str(model.id)
+
+    def test_get_specific_flight_with_invalid_token_fails(
+            self, client, valid_flight_one, saved_valid_admin_user_model_one):
+        model = Flight(
+            **valid_flight_one, createdBy=saved_valid_admin_user_model_one)
+        model.save()
+
+        response = client.get(
+            '/api/v1/flight/{}'.format(model.id),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer {}'.format('invalid-token'),
+        )
+
+        response_body = response.data
         assert response.status_code == 401  # unauthorized
         assert response_body['status'] == 'error'
         assert response_body['message'] == tokenization_errors[
