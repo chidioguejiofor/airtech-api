@@ -12,5 +12,13 @@ msg_dict = {
     'invalid_flight_type':
     'Flight type must be either international or local',
     'invalid_flight_schedule':
-    'Flight schedule must be at least 12 hours before it is created'
+    'Flight schedule must be at least 12 hours before it is created',
+    'resource_id_not_found':
+    '{} with id `{}` does not exist',
+    'user_book_flight_twice':
+    'You had previously booked for this Flight and thus cannot do it again',
+    'flight_booking_expired':
+    'You cannot book for a flight less than 24 hours before the flight',
+    'flight_schedule_expired':
+    'The schedule of this flight has already passed and thus you cannot book it'
 }

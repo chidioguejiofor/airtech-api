@@ -35,7 +35,8 @@ INSTALLED_APPS = [
     'rest_framework', 'django.contrib.admin', 'django.contrib.auth',
     'django.contrib.contenttypes', 'django.contrib.sessions',
     'django.contrib.messages', 'django.contrib.staticfiles',
-    'airtech_api.users', 'airtech_api.utils', 'airtech_api.flight'
+    'airtech_api.users', 'airtech_api.utils', 'airtech_api.flight',
+    'airtech_api.booking'
 ]
 
 MIDDLEWARE = [

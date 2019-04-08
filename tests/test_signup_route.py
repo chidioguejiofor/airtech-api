@@ -5,6 +5,8 @@ from airtech_api.utils import success_messages
 from airtech_api.utils.error_messages import serialization_errors
 from airtech_api.utils.constants import FIELD_IS_REQUIRED_STR
 
+from tests.mocks.users import valid_json_user
+
 
 @pytest.mark.django_db
 class TestSignupRoute:
@@ -78,17 +80,10 @@ class TestSignupRoute:
             None
         """
 
-        valid_data = {
-            "username": "age1201",
-            "firstName": "MMM",
-            "lastName": "fdajhfio",
-            "email": "chid@email.com",
-            "gender": "female",
-            "password": "password"
-        }
-
         response = client.post(
-            '/api/v1/signup', data=valid_data, content_type="application/json")
+            '/api/v1/signup',
+            data=valid_json_user,
+            content_type="application/json")
         response_body = response.data
         data = response_body['data']
 
@@ -99,7 +94,7 @@ class TestSignupRoute:
         assert 'id' in data
         assert 'token' in data
         assert 'password' not in data
-        assert data['gender'].lower() == 'female'
-        assert data['firstName'] == valid_data['firstName']
-        assert data['lastName'] == valid_data['lastName']
-        assert data['email'] == valid_data['email']
+        assert data['gender'].lower() == valid_json_user['gender']
+        assert data['firstName'] == valid_json_user['firstName']
+        assert data['lastName'] == valid_json_user['lastName']
+        assert data['email'] == valid_json_user['email']

@@ -4,8 +4,9 @@ from django.core.paginator import Paginator
 from ..constants import DEFAULT_ITEMS_PER_PAGE
 from rest_framework.response import Response
 from rest_framework import serializers
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 from datetime import datetime, timedelta
+from django.core.exceptions import ValidationError
 
 
 def generate_response(response_data,
@@ -94,3 +95,14 @@ def parse_paginator_request_query(query_params, queryset):
     page = total_pages if page > total_pages else page
 
     return paginator, page
+
+
+def retrieve_model_with_id(model, model_id, *err_args, **err_kwargs):
+    try:
+        flight = model.objects.filter(id=model_id).first()
+        if not flight:
+            raise ValidationError('')
+    except ValidationError:
+        raise_error(*err_args, status_code=HTTP_404_NOT_FOUND, **err_kwargs)
+
+    return flight
