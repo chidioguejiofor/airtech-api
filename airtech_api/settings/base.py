@@ -15,8 +15,10 @@ import dj_database_url
 from dotenv import load_dotenv
 load_dotenv()
 
+DEBUG=True
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# DJANGO_SETTINGS_MODULE= os.getenv('DJANGO_SETTINGS_MODULE', 'airtech_api.settings')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
@@ -32,11 +34,17 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'rest_framework', 'django.contrib.admin', 'django.contrib.auth',
-    'django.contrib.contenttypes', 'django.contrib.sessions',
-    'django.contrib.messages', 'django.contrib.staticfiles',
-    'airtech_api.users', 'airtech_api.utils', 'airtech_api.flight',
-    'airtech_api.booking'
+    'rest_framework',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'airtech_api.users',
+    'airtech_api.utils',
+    'airtech_api.flight',
+    'airtech_api.booking',
 ]
 
 MIDDLEWARE = [
@@ -124,3 +132,10 @@ REST_FRAMEWORK = {
     'DEFAULT_MODEL_SERIALIZER_CLASS':
     'drf_toolbox.serializers.ModelSerializer',
 }
+
+
+ENVIRONMENT=os.getenv('ENVIRONMENT', 'development')
+
+if ENVIRONMENT.lower() == 'docker_dev':
+    from .docker_dev import *
+

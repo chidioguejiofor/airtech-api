@@ -1,0 +1,5 @@
+[run]
+omit =
+    airtech_api/settings/*
+    airtech_api/wsgi.py
+    airtech_api/services/*

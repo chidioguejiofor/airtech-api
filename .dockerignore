@@ -4,4 +4,4 @@ airtech-api-db
 htmlcov
 .coverage*
 **/*/__pycache__
-
+airtech-redis

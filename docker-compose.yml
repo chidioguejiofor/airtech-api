@@ -15,6 +15,16 @@ services:
       - webnet
     ports:
       - '5433:5432'
+
+  redis:
+    image: redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - ./airtech-redis:/data
+    networks:
+      - webnet
+
   api:
 
 #   To build the dockerfile from the image uncomment the image key above and comment the build below
@@ -36,10 +46,12 @@ services:
       - webnet
     depends_on:
       - db
+      - redis
     volumes:
       - .:/airtech-api
     environment:
       DATABASE_URI: postgres://postgres:password@db:5432/airtech_docker_db
+      REDIS_SERVER_URL: redis://redis:6379/0
 
 networks:
   webnet:
