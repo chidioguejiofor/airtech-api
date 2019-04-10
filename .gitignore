@@ -5,6 +5,8 @@ htmlcov
 airtech-api
 airtech-api-db
 
-.coverage*
-**/*/__pycache__
 **/*/*.pyc
+celerybeat-schedule.db
+airtech-redis
+celerybeat.pid
+celerybeat-schedule
