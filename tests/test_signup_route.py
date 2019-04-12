@@ -72,18 +72,44 @@ class TestSignupRoute:
         assert response.status_code == 400
         assert response_body['status'] == 'error'
 
-    def test_signup_with_valid_data_succeeds(self, client):
+    def test_signup_with_gender_eq_male_succeeds(self, client):
         """Should return a welcome message to the user on GET /api
 
 
         Returns:
             None
         """
+        json_user = dict(**valid_json_user)
+        json_user['gender'] = 'male'
+        response = client.post(
+            '/api/v1/signup', data=json_user, content_type="application/json")
+        response_body = response.data
+        data = response_body['data']
+
+        assert response.status_code == 201
+        assert response_body['status'] == 'success'
+        assert response_body['message'] == success_messages[
+            'auth_successful'].format("Sign Up")
+        assert 'id' in data
+        assert 'token' in data
+        assert 'password' not in data
+        assert data['gender'].lower() == 'male'
+        assert data['firstName'] == valid_json_user['firstName']
+        assert data['lastName'] == valid_json_user['lastName']
+        assert data['email'] == valid_json_user['email']
+
+    def test_signup_with_gender_equals_female_succeeds(self, client):
+        """Should return a welcome message to the user on GET /api
+
+
+        Returns:
+            None
+        """
+        json_user = dict(**valid_json_user)
+        json_user['gender'] = 'female'
 
         response = client.post(
-            '/api/v1/signup',
-            data=valid_json_user,
-            content_type="application/json")
+            '/api/v1/signup', data=json_user, content_type="application/json")
         response_body = response.data
         data = response_body['data']
 

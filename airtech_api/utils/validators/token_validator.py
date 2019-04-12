@@ -16,8 +16,8 @@ class TokenValidator(BasePermission):
 
     def has_permission(self, request, view):
 
-        if request.method not in view.protected_methods:
-            return True
+        # if request.method not in view.protected_methods:
+        #     return True
 
         if 'Authorization' not in request.headers:
             raise_error(

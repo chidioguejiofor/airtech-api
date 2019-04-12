@@ -68,7 +68,9 @@ class SingleFlightView(APIView):
     def get(request, *args, **kwargs):
         flight_id = kwargs.get('id')
         flight = retrieve_model_with_id(
-            Flight, flight_id, 'Not found', status_code=HTTP_404_NOT_FOUND)
+            Flight, flight_id,
+            serialization_errors['resource_id_not_found'].format(
+                'Flight', flight_id))
         json_flight = FlightSerializer(flight).data
 
         return generate_response(

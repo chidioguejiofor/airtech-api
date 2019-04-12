@@ -2,8 +2,11 @@ import pytest
 from datetime import datetime, timedelta
 from airtech_api.utils import success_messages
 from airtech_api.utils.error_messages import serialization_errors
-from tests.helpers.assertion_helpers import assert_token_is_invalid, assert_invalid_token_format
+from tests.helpers.assertion_helpers import (
+    assert_token_is_invalid, assert_invalid_token_format, assert_expired_token,
+    assert_resource_not_found)
 
+from uuid import uuid4
 from dateutil.parser import parse
 
 
@@ -34,6 +37,7 @@ class TestFlightRoute:
 
         assert 'createdAt' in response_data
         assert 'creator' not in response_data['flight']
+        #
 
     def test_book_flight_with_days_to_flight_gte_60_succeeds(
             self, client, saved_flight_with_days_to_flight_gt_60,
@@ -204,6 +208,21 @@ class TestFlightRoute:
         assert response_body['message'] == success_messages['booking_success']
         assert timedelta(hours=6) == time_diff
 
+    def test_book_expired_flight_fails(self, client, valid_user_one_token,
+                                       saved_valid_user_one,
+                                       saved_expired_flight_one):
+        valid_flight_id = str(saved_expired_flight_one.id)
+        response = client.post(
+            '/api/v1/flight/{}/booking'.format(valid_flight_id),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer {}'.format(valid_user_one_token),
+        )
+        response_body = response.data
+        assert response.status_code == 400
+        assert response_body['status'] == 'error'
+        assert response_body['message'] == serialization_errors[
+            'flight_schedule_expired']
+
     def test_book_flight_twice_fails(self, client, valid_user_one_token,
                                      saved_valid_user_one,
                                      saved_valid_flight_model_one):
@@ -247,3 +266,37 @@ class TestFlightRoute:
         )
 
         assert_invalid_token_format(response)
+
+    def test_book_flight_with_expired_token_format_fails(
+            self, client, expired_token_for_user_one,
+            saved_valid_flight_model_one):
+        valid_flight_id = str(saved_valid_flight_model_one.id)
+        response = client.post(
+            '/api/v1/flight/{}/booking'.format(valid_flight_id),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer {}'.format(expired_token_for_user_one),
+        )
+
+        assert_expired_token(response)
+
+    def test_book_fligh_with_invalid_flight_id_format_fails(
+            self, client, valid_user_one_token, saved_valid_flight_model_one):
+        invalid_uuid = 'invalid-uuid'
+        response = client.post(
+            '/api/v1/flight/{}/booking'.format(invalid_uuid),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer {}'.format(valid_user_one_token),
+        )
+
+        assert_resource_not_found(response, 'Flight', invalid_uuid)
+
+    def test_book_fligh_with_valid_uuid_that_is_not_a_flight_id_fails(
+            self, client, valid_user_one_token, saved_valid_flight_model_one):
+        valid_uuid_not_in_db = uuid4()
+
+        response = client.post(
+            '/api/v1/flight/{}/booking'.format(valid_uuid_not_in_db),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer {}'.format(valid_user_one_token),
+        )
+        assert_resource_not_found(response, 'Flight', valid_uuid_not_in_db)

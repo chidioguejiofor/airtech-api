@@ -43,7 +43,7 @@ class TestLoginRoute:
         assert errors['usernameOrEmail'][0] == FIELD_IS_REQUIRED_STR
         assert errors['password'][0] == FIELD_IS_REQUIRED_STR
 
-    def test_login_with_valid_data_succeeds(self, client):
+    def test_login_with_valid_username_succeeds(self, client):
         """Should succeed when the valid credentials are passed
 
         Args:
@@ -56,6 +56,39 @@ class TestLoginRoute:
 
         valid_data = {
             'usernameOrEmail': valid_user_three['username'],
+            'password': valid_user_three['password'],
+        }
+
+        response = client.post(
+            '/api/v1/login', data=valid_data, content_type="application/json")
+        response_body = response.data
+        data = response_body['data']
+        assert response.status_code == 200
+        assert response_body['status'] == 'success'
+        assert response_body['message'] == success_messages[
+            'auth_successful'].format("Login")
+        assert 'id' in data
+        assert 'token' in data
+        assert 'password' not in data
+        assert data['gender'].lower() == valid_user_three['gender']
+        assert data['username'] == valid_user_three['username']
+        assert data['firstName'] == valid_user_three['first_name']
+        assert data['lastName'] == valid_user_three['last_name']
+        assert data['email'] == valid_user_three['email']
+
+    def test_login_with_valid_email_succeeds(self, client):
+        """Should succeed when the valid credentials are passed
+
+        Args:
+            client (fixture): a pytest fixture that is used to make HTTP Requests
+        Returns:
+            None
+        """
+        model = User(**valid_user_three)
+        model.save()
+
+        valid_data = {
+            'usernameOrEmail': valid_user_three['email'],
             'password': valid_user_three['password'],
         }
 
