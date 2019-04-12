@@ -11,7 +11,7 @@ valid_flight_one = {
 }
 
 
-def generate_flight_in_the_future(**timedelta_args):
+def generate_flight_with_timedelta_args(**timedelta_args):
     return {
         "capacity": 70,
         "location": "Popo York",

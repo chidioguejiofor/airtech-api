@@ -46,8 +46,4 @@ class BookingView(APIView):
                 serialization_errors['user_book_flight_twice'],
                 status_code=HTTP_409_CONFLICT)
 
-        if 'flight_model' in serializer.errors:
-            raise_error(serializer.errors['flight_model'][0])
-        raise_error(
-            serialization_errors['many_invalid_fields'],
-            err_dict=serializer.errors)
+        raise_error(serializer.errors['flight_model'][0])

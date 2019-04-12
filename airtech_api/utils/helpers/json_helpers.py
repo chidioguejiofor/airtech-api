@@ -39,22 +39,24 @@ def raise_error(message,
     raise api_exception
 
 
-def add_token_to_response(user_data):
+def add_token_to_response(user_data, exp=None):
     """Clean up response sent to users
 
     Removes password field and adds token to user data
 
     Args:
         user_data: The user data to be passed
-
+        exp: The expiry date
     Returns:
 
     """
+    if not exp:
+        exp = datetime.utcnow() + timedelta(weeks=1)
     token_data = {
         'id': user_data['id'],
         'username': user_data['username'],
         'email': user_data['email'],
-        'exp': datetime.utcnow() + timedelta(weeks=1)
+        'exp': exp
     }
     user_data['token'] = jwt.encode(
         token_data, os.getenv('JWT_SCRET_KEY'), algorithm='HS256')
@@ -99,10 +101,10 @@ def parse_paginator_request_query(query_params, queryset):
 
 def retrieve_model_with_id(model, model_id, *err_args, **err_kwargs):
     try:
-        flight = model.objects.filter(id=model_id).first()
-        if not flight:
+        model_instance = model.objects.filter(id=model_id).first()
+        if not model_instance:
             raise ValidationError('')
     except ValidationError:
-        raise_error(*err_args, status_code=HTTP_404_NOT_FOUND, **err_kwargs)
+        raise_error(*err_args, HTTP_404_NOT_FOUND, **err_kwargs)
 
-    return flight
+    return model_instance

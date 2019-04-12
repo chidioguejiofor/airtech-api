@@ -1,6 +1,6 @@
 """Module contains assertions used in tests. Each takes a response object"""
 
-from airtech_api.utils.error_messages import tokenization_errors
+from airtech_api.utils.error_messages import tokenization_errors, serialization_errors
 
 
 def assert_missing_header(response):
@@ -32,3 +32,21 @@ def assert_token_is_invalid(response):
     assert response.status_code == 401  # unauthorized
     assert response_body['status'] == 'error'
     assert response_body['message'] == tokenization_errors['token_is_invalid']
+
+
+def assert_expired_token(response):
+    response_body = response.data
+
+    assert response.status_code == 401  # unauthorized
+    assert response_body['status'] == 'error'
+    assert response_body['message'] == tokenization_errors['expired_token']
+
+
+def assert_resource_not_found(response, resource_name, bad_id):
+    response_body = response.data
+    assert response.status_code == 404
+    assert response_body['status'] == 'error'
+    assert response_body['message'] == \
+           serialization_errors['resource_id_not_found'].format(
+               resource_name, bad_id
+           )
