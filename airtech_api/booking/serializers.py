@@ -11,15 +11,14 @@ from django.utils import timezone
 class BookingSerializer(serializers.ModelSerializer):
     bookedBy = UserSerializer(source='created_by', read_only=True)
     flight = FlightSerializer(source='flight_model', required=False)
-    ticketPrice = serializers.DecimalField(
-        source='ticket_price',
-        decimal_places=2,
-        max_digits=100,
-        read_only=True)
+    ticketPrice = serializers.DecimalField(source='ticket_price',
+                                           decimal_places=2,
+                                           max_digits=100,
+                                           read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', required=False)
     updatedAt = serializers.DateTimeField(source='updated_at', read_only=True)
-    expiryDate = serializers.DateTimeField(
-        source='expiry_date', read_only=True)
+    expiryDate = serializers.DateTimeField(source='expiry_date',
+                                           read_only=True)
 
     class Meta:
         model = Booking
@@ -50,9 +49,8 @@ class BookingSerializer(serializers.ModelSerializer):
 
         flight_has_expired = validated_data.schedule < timezone.now()
         if flight_has_expired:
-            raise_error(
-                serialization_errors['flight_schedule_expired'],
-                raise_only_message=True)
+            raise_error(serialization_errors['flight_schedule_expired'],
+                        raise_only_message=True)
 
         return validated_data
 

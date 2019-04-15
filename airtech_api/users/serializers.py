@@ -51,8 +51,8 @@ class UserSerializer(serializers.ModelSerializer):
         elif gender_str in ['female', 'f']:
             return 'Female'
 
-        raise raise_error(
-            serialization_errors['invalid_gender'], raise_only_message=True)
+        raise raise_error(serialization_errors['invalid_gender'],
+                          raise_only_message=True)
 
     def create(self, validated_data):
         return User.objects.create(**validated_data)

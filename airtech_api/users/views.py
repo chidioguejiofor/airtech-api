@@ -29,9 +29,8 @@ class SignupView(APIView):
                 success_messages['auth_successful'].format('Sign Up'),
                 status_code=HTTP_201_CREATED)
 
-        raise_error(
-            serialization_errors['many_invalid_fields'],
-            err_dict=serializer.errors)
+        raise_error(serialization_errors['many_invalid_fields'],
+                    err_dict=serializer.errors)
 
 
 class LoginView(APIView):
@@ -56,10 +55,8 @@ class LoginView(APIView):
                 status_code=HTTP_200_OK)
 
         if 'non_field_errors' in serializer.errors.keys():
-            raise_error(
-                serialization_errors['user_not_found'],
-                status_code=HTTP_404_NOT_FOUND)
+            raise_error(serialization_errors['user_not_found'],
+                        status_code=HTTP_404_NOT_FOUND)
 
-        raise_error(
-            serialization_errors['many_invalid_fields'],
-            err_dict=serializer.errors)
+        raise_error(serialization_errors['many_invalid_fields'],
+                    err_dict=serializer.errors)

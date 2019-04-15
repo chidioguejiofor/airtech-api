@@ -140,5 +140,7 @@ ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
 if ENVIRONMENT.lower() == 'docker_dev':
     from .docker_dev import *
 
+if ENVIRONMENT.lower() != 'production':
+    ALLOWED_HOSTS.append('127.0.0.1')
 if ENVIRONMENT.lower() == 'production':
     DEBUG = False

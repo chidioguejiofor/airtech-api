@@ -23,8 +23,9 @@ class TestLoginRoute:
 
         """
         empty_dict = {}
-        response = client.post(
-            '/api/v1/login', data=empty_dict, content_type="application/json")
+        response = client.post('/api/v1/login',
+                               data=empty_dict,
+                               content_type="application/json")
         response_body = response.data
         errors = response_body['errors']
 
@@ -59,8 +60,9 @@ class TestLoginRoute:
             'password': valid_user_three['password'],
         }
 
-        response = client.post(
-            '/api/v1/login', data=valid_data, content_type="application/json")
+        response = client.post('/api/v1/login',
+                               data=valid_data,
+                               content_type="application/json")
         response_body = response.data
         data = response_body['data']
         assert response.status_code == 200
@@ -92,8 +94,9 @@ class TestLoginRoute:
             'password': valid_user_three['password'],
         }
 
-        response = client.post(
-            '/api/v1/login', data=valid_data, content_type="application/json")
+        response = client.post('/api/v1/login',
+                               data=valid_data,
+                               content_type="application/json")
         response_body = response.data
         data = response_body['data']
         assert response.status_code == 200
@@ -121,10 +124,9 @@ class TestLoginRoute:
             'password': 'password',
         }
 
-        response = client.post(
-            '/api/v1/login',
-            data=user_not_in_db_data,
-            content_type="application/json")
+        response = client.post('/api/v1/login',
+                               data=user_not_in_db_data,
+                               content_type="application/json")
         response_body = response.data
         assert response.status_code == 404
         assert response_body['status'] == 'error'

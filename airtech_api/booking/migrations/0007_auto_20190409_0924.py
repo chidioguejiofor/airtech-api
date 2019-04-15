@@ -15,9 +15,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='booking',
             name='expiryDate',
-            field=models.DateTimeField(
-                default=datetime.datetime(
-                    2019, 4, 9, 9, 24, 43, 708277, tzinfo=utc)),
+            field=models.DateTimeField(default=datetime.datetime(
+                2019, 4, 9, 9, 24, 43, 708277, tzinfo=utc)),
         ),
         migrations.AddField(
             model_name='booking',

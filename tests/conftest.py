@@ -1,12 +1,14 @@
 import pytest
 from airtech_api.users.models import User
 from airtech_api.flight.models import Flight
+from airtech_api.booking.models import Booking
 from airtech_api.utils.helpers.json_helpers import add_token_to_response
 from tests.mocks.users import valid_admin_user, valid_user_one
 from tests.mocks.flight import (
     valid_flight_one,
     generate_flight_with_timedelta_args,
 )
+from tests.mocks.booking import (generate_booking_model_data_with_timedelta)
 from datetime import datetime, timedelta
 
 
@@ -30,8 +32,8 @@ def saved_valid_admin_user_model_one(transactional_db):
 def saved_valid_flight_model_one(transactional_db,
                                  saved_valid_admin_user_model_one):
 
-    flight = Flight(
-        **valid_flight_one, created_by=saved_valid_admin_user_model_one)
+    flight = Flight(**valid_flight_one,
+                    created_by=saved_valid_admin_user_model_one)
     flight.save()
     return flight
 
@@ -39,9 +41,8 @@ def saved_valid_flight_model_one(transactional_db,
 @pytest.fixture(scope='function')
 def saved_expired_flight_one(transactional_db,
                              saved_valid_admin_user_model_one):
-    flight = Flight(
-        **generate_flight_with_timedelta_args(days=-1),
-        created_by=saved_valid_admin_user_model_one)
+    flight = Flight(**generate_flight_with_timedelta_args(days=-1),
+                    created_by=saved_valid_admin_user_model_one)
     flight.save()
     return flight
 
@@ -52,20 +53,32 @@ def saved_bulk_inserted_flights(transactional_db,
     flights = []
     for _ in range(15):
         flights.append(
-            Flight(
-                **generate_flight_with_timedelta_args(days=-1),
-                created_by=saved_valid_admin_user_model_one))
+            Flight(**generate_flight_with_timedelta_args(days=-1),
+                   created_by=saved_valid_admin_user_model_one))
 
     saved_flights = Flight.objects.bulk_create(flights)
     return saved_flights
 
 
 @pytest.fixture(scope='function')
+def saved_bulk_inserted_bookings_for_user_one(transactional_db,
+                                              saved_bulk_inserted_flights,
+                                              saved_valid_user_one):
+    bookings = []
+    for flight in saved_bulk_inserted_flights:
+        bookings.append(
+            Booking(**generate_booking_model_data_with_timedelta(
+                saved_valid_user_one, flight)))
+
+    saved_bookings = Booking.objects.bulk_create(bookings)
+    return saved_bookings
+
+
+@pytest.fixture(scope='function')
 def saved_flight_with_days_to_flight_gt_60(transactional_db,
                                            saved_valid_admin_user_model_one):
-    flight = Flight(
-        **generate_flight_with_timedelta_args(days=79),
-        created_by=saved_valid_admin_user_model_one)
+    flight = Flight(**generate_flight_with_timedelta_args(days=79),
+                    created_by=saved_valid_admin_user_model_one)
     flight.save()
     return flight
 
@@ -73,9 +86,8 @@ def saved_flight_with_days_to_flight_gt_60(transactional_db,
 @pytest.fixture(scope='function')
 def saved_flight_with_days_to_flight_btw_30_and_59(
         transactional_db, saved_valid_admin_user_model_one):
-    flight = Flight(
-        **generate_flight_with_timedelta_args(days=40),
-        created_by=saved_valid_admin_user_model_one)
+    flight = Flight(**generate_flight_with_timedelta_args(days=40),
+                    created_by=saved_valid_admin_user_model_one)
     flight.save()
     return flight
 
@@ -83,9 +95,8 @@ def saved_flight_with_days_to_flight_btw_30_and_59(
 @pytest.fixture(scope='function')
 def saved_flight_with_days_to_flight_btw_7_and_29(
         transactional_db, saved_valid_admin_user_model_one):
-    flight = Flight(
-        **generate_flight_with_timedelta_args(days=19),
-        created_by=saved_valid_admin_user_model_one)
+    flight = Flight(**generate_flight_with_timedelta_args(days=19),
+                    created_by=saved_valid_admin_user_model_one)
     flight.save()
     return flight
 
@@ -93,9 +104,8 @@ def saved_flight_with_days_to_flight_btw_7_and_29(
 @pytest.fixture(scope='function')
 def saved_flight_with_days_to_flight_btw_4_and_6(
         transactional_db, saved_valid_admin_user_model_one):
-    flight = Flight(
-        **generate_flight_with_timedelta_args(days=5),
-        created_by=saved_valid_admin_user_model_one)
+    flight = Flight(**generate_flight_with_timedelta_args(days=5),
+                    created_by=saved_valid_admin_user_model_one)
     flight.save()
     return flight
 
@@ -103,9 +113,8 @@ def saved_flight_with_days_to_flight_btw_4_and_6(
 @pytest.fixture(scope='function')
 def saved_flight_with_days_to_flight_btw_2_and_3(
         transactional_db, saved_valid_admin_user_model_one):
-    flight = Flight(
-        **generate_flight_with_timedelta_args(days=2.5),
-        created_by=saved_valid_admin_user_model_one)
+    flight = Flight(**generate_flight_with_timedelta_args(days=2.5),
+                    created_by=saved_valid_admin_user_model_one)
     flight.save()
     return flight
 
@@ -113,9 +122,8 @@ def saved_flight_with_days_to_flight_btw_2_and_3(
 @pytest.fixture(scope='function')
 def saved_flight_with_hours_to_flight_btw_1_and_6(
         transactional_db, saved_valid_admin_user_model_one):
-    flight = Flight(
-        **generate_flight_with_timedelta_args(hours=5),
-        created_by=saved_valid_admin_user_model_one)
+    flight = Flight(**generate_flight_with_timedelta_args(hours=5),
+                    created_by=saved_valid_admin_user_model_one)
     flight.save()
     return flight
 
@@ -145,9 +153,10 @@ def valid_user_one_token(saved_valid_user_one):
 @pytest.fixture(scope='function')
 def expired_token_for_user_one(saved_valid_user_one):
     exp_time = datetime.utcnow() - timedelta(seconds=1)
-    return add_token_to_response({
-        'username': saved_valid_user_one.username,
-        'id': str(saved_valid_user_one.id),
-        'email': saved_valid_user_one.email,
-    },
-                                 exp=exp_time)['token'].decode('ascii')
+    return add_token_to_response(
+        {
+            'username': saved_valid_user_one.username,
+            'id': str(saved_valid_user_one.id),
+            'email': saved_valid_user_one.email,
+        },
+        exp=exp_time)['token'].decode('ascii')

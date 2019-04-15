@@ -22,8 +22,9 @@ class TestSignupRoute:
 
         """
         empty_dict = {}
-        response = client.post(
-            '/api/v1/signup', data=empty_dict, content_type="application/json")
+        response = client.post('/api/v1/signup',
+                               data=empty_dict,
+                               content_type="application/json")
         response_body = response.data
         errors = response_body['errors']
 
@@ -62,10 +63,9 @@ class TestSignupRoute:
             "password": "password"
         }
 
-        response = client.post(
-            '/api/v1/signup',
-            data=invalid_gender,
-            content_type="application/json")
+        response = client.post('/api/v1/signup',
+                               data=invalid_gender,
+                               content_type="application/json")
         response_body = response.data
         errors = response_body['errors']
         assert errors['gender'][0] == serialization_errors['invalid_gender']
@@ -81,8 +81,9 @@ class TestSignupRoute:
         """
         json_user = dict(**valid_json_user)
         json_user['gender'] = 'male'
-        response = client.post(
-            '/api/v1/signup', data=json_user, content_type="application/json")
+        response = client.post('/api/v1/signup',
+                               data=json_user,
+                               content_type="application/json")
         response_body = response.data
         data = response_body['data']
 
@@ -108,8 +109,9 @@ class TestSignupRoute:
         json_user = dict(**valid_json_user)
         json_user['gender'] = 'female'
 
-        response = client.post(
-            '/api/v1/signup', data=json_user, content_type="application/json")
+        response = client.post('/api/v1/signup',
+                               data=json_user,
+                               content_type="application/json")
         response_body = response.data
         data = response_body['data']
 
