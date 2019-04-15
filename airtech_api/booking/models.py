@@ -15,8 +15,9 @@ class Booking(BaseModel):
         db_column='flight_id',
     )
 
-    ticket_price = models.DecimalField(
-        decimal_places=2, max_digits=100, null=False)
+    ticket_price = models.DecimalField(decimal_places=2,
+                                       max_digits=100,
+                                       null=False)
 
     created_by = models.ForeignKey(
         User,

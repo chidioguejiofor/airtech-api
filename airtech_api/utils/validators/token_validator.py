@@ -20,16 +20,14 @@ class TokenValidator(BasePermission):
         #     return True
 
         if 'Authorization' not in request.headers:
-            raise_error(
-                tokenization_errors['missing_token'],
-                status_code=HTTP_401_UNAUTHORIZED)
+            raise_error(tokenization_errors['missing_token'],
+                        status_code=HTTP_401_UNAUTHORIZED)
 
         authorization = request.headers.get('Authorization').split(' ')
 
         if len(authorization) != 2 or authorization[0] != 'Bearer':
-            raise_error(
-                tokenization_errors['token_format_error'],
-                status_code=HTTP_401_UNAUTHORIZED)
+            raise_error(tokenization_errors['token_format_error'],
+                        status_code=HTTP_401_UNAUTHORIZED)
 
         token = authorization[1]
         data = self.decode_token(token)
@@ -37,9 +35,8 @@ class TokenValidator(BasePermission):
         user = User.objects.filter(id=data.get('id', '')).first()
 
         if not self.is_user_valid(user, request, view):
-            raise_error(
-                self.validation_error_message,
-                status_code=self.validation_status_code)
+            raise_error(self.validation_error_message,
+                        status_code=self.validation_status_code)
 
         request.decoded_user = user
 
@@ -59,16 +56,15 @@ class TokenValidator(BasePermission):
             (dict): The data contained in the token
         """
         try:
-            return jwt.decode(
-                token, os.getenv('JWT_SCRET_KEY'), algorithms=['HS256'])
+            return jwt.decode(token,
+                              os.getenv('JWT_SCRET_KEY'),
+                              algorithms=['HS256'])
         except jwt.ExpiredSignatureError:
-            raise_error(
-                tokenization_errors['expired_token'],
-                status_code=HTTP_401_UNAUTHORIZED)
+            raise_error(tokenization_errors['expired_token'],
+                        status_code=HTTP_401_UNAUTHORIZED)
         except jwt.exceptions.DecodeError:
-            raise_error(
-                tokenization_errors['token_is_invalid'],
-                status_code=HTTP_401_UNAUTHORIZED)
+            raise_error(tokenization_errors['token_is_invalid'],
+                        status_code=HTTP_401_UNAUTHORIZED)
 
     def is_user_valid(self, user, request, view):
         """Checks if the user is valid

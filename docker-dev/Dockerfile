@@ -15,6 +15,7 @@ COPY ./Pipfile.lock /airtech-api
 
 # Install dependencies in the Pipfile
 RUN  pipenv install --system  --deploy --ignore-pipfile
+
 # Copy all the other files/folders to airtech-api
 COPY . /airtech-api
 

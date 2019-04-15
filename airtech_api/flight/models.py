@@ -9,7 +9,7 @@ class Flight(AuditableBaseModel):
     location = models.TextField(null=False)
     destination = models.TextField(null=False)
     schedule = models.DateTimeField(null=False)
-    currentPrice = models.DecimalField(decimal_places=2, max_digits=100)
+    current_price = models.DecimalField(decimal_places=2, max_digits=100)
 
     type = models.CharField(
         choices=(('local', 'local'), ('international', 'international')),

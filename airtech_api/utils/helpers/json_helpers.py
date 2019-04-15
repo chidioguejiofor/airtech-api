@@ -58,8 +58,9 @@ def add_token_to_response(user_data, exp=None):
         'email': user_data['email'],
         'exp': exp
     }
-    user_data['token'] = jwt.encode(
-        token_data, os.getenv('JWT_SCRET_KEY'), algorithm='HS256')
+    user_data['token'] = jwt.encode(token_data,
+                                    os.getenv('JWT_SCRET_KEY'),
+                                    algorithm='HS256')
     return user_data
 
 

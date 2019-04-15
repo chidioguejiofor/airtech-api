@@ -1,14 +1,19 @@
 import pytest
 
 from airtech_api.utils import success_messages
-from airtech_api.utils.error_messages import tokenization_errors, serialization_errors
+from airtech_api.utils.error_messages import serialization_errors
 from airtech_api.flight.models import Flight
 from datetime import datetime, timedelta
 
-from tests.mocks.flight import valid_flight_one
-from tests.helpers.assertion_helpers import (
-    assert_missing_header, assert_invalid_token_format, assert_forbidden_user,
-    assert_token_is_invalid, assert_resource_not_found)
+from tests.mocks.flight import valid_flight_one, camelized_valid_flight_one
+from tests.helpers.assertion_helpers import (assert_missing_header,
+                                             assert_invalid_token_format,
+                                             assert_forbidden_user,
+                                             assert_token_is_invalid,
+                                             assert_resource_not_found)
+
+FLIGHT_URL = '/api/v1/flights'
+SINGLE_FLIGHT_URL = '/api/v1/flights/{}'
 
 
 @pytest.mark.django_db
@@ -20,8 +25,8 @@ class TestFlightRoute:
             saved_valid_admin_user_model_one):
 
         response = client.post(
-            '/api/v1/flight',
-            data=valid_flight_one,
+            FLIGHT_URL,
+            data=camelized_valid_flight_one,
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer {}'.format(valid_admin_user_token),
         )
@@ -37,7 +42,6 @@ class TestFlightRoute:
             'resource_created'].format('Flight')
 
         # Fields that should be in the Response Body
-        assert 'creator' in response_data
         assert 'id' in response_data
         assert 'updatedAt' in response_data
         assert 'createdAt' in response_data
@@ -47,19 +51,17 @@ class TestFlightRoute:
         assert response_data['location'] == valid_flight_one['location']
         assert response_data['destination'] == valid_flight_one['destination']
         assert float(
-            response_data['currentPrice']) == valid_flight_one['currentPrice']
+            response_data['currentPrice']) == valid_flight_one['current_price']
         assert response_data['type'] == valid_flight_one['type']
         assert response_data['updatedAt'] is None
 
+        creator_model = Flight.objects.get(pk=response_data['id']).created_by
+
         # Assert Creator values
-        assert response_data['creator']['id'] == str(
-            saved_valid_admin_user_model_one.id)
-        assert response_data['creator'][
-            'firstName'] == saved_valid_admin_user_model_one.first_name
-        assert response_data['creator'][
-            'lastName'] == saved_valid_admin_user_model_one.last_name
-        assert response_data['creator'][
-            'gender'] == saved_valid_admin_user_model_one.gender
+        assert creator_model.id == saved_valid_admin_user_model_one.id
+        assert creator_model.first_name == saved_valid_admin_user_model_one.first_name
+        assert creator_model.last_name == saved_valid_admin_user_model_one.last_name
+        assert creator_model.gender == saved_valid_admin_user_model_one.gender
 
         # Assert that the user is admin
         assert saved_valid_admin_user_model_one.admin is True
@@ -71,7 +73,7 @@ class TestFlightRoute:
         invalid_schedule_dict = dict(**valid_flight_one)
         invalid_schedule_dict['schedule'] = datetime.now() - timedelta(days=1)
         response = client.post(
-            '/api/v1/flight',
+            FLIGHT_URL,
             data=invalid_schedule_dict,
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer {}'.format(valid_admin_user_token),
@@ -93,7 +95,7 @@ class TestFlightRoute:
         invalid_schedule_dict = dict(**valid_flight_one)
         invalid_schedule_dict['type'] = 'intercon'
         response = client.post(
-            '/api/v1/flight',
+            FLIGHT_URL,
             data=invalid_schedule_dict,
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer {}'.format(valid_admin_user_token),
@@ -110,10 +112,9 @@ class TestFlightRoute:
 
     def test_create_flight_with_missing_header_fails(self, client):
 
-        response = client.post(
-            '/api/v1/flight',
-            data=valid_flight_one,
-            content_type='application/json')
+        response = client.post(FLIGHT_URL,
+                               data=valid_flight_one,
+                               content_type='application/json')
 
         assert_missing_header(response)
 
@@ -122,7 +123,7 @@ class TestFlightRoute:
             saved_valid_admin_user_model_one):
 
         response = client.post(
-            '/api/v1/flight',
+            FLIGHT_URL,
             data=valid_flight_one,
             content_type='application/json',
             HTTP_AUTHORIZATION='{}'.format(valid_admin_user_token),
@@ -134,7 +135,7 @@ class TestFlightRoute:
                                                  valid_user_one_token):
 
         response = client.post(
-            '/api/v1/flight',
+            FLIGHT_URL,
             data=valid_flight_one,
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer {}'.format(valid_user_one_token),
@@ -147,7 +148,7 @@ class TestFlightRoute:
                                                        valid_user_one_token):
 
         response = client.get(
-            '/api/v1/flight',
+            FLIGHT_URL,
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer {}'.format(valid_user_one_token),
         )
@@ -169,7 +170,7 @@ class TestFlightRoute:
             self, client, valid_user_one_token, saved_bulk_inserted_flights):
 
         response = client.get(
-            '/api/v1/flight?page=2&limit=5',
+            FLIGHT_URL + '?page=2&limit=5',
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer {}'.format(valid_user_one_token),
         )
@@ -192,7 +193,7 @@ class TestFlightRoute:
             self, client, valid_admin_user_token):
 
         response = client.get(
-            '/api/v1/flight',
+            FLIGHT_URL,
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer {}'.format(valid_admin_user_token),
         )
@@ -212,7 +213,7 @@ class TestFlightRoute:
 
     def test_get_all_with_invalid_token_fails(self, client):
         response = client.get(
-            '/api/v1/flight',
+            FLIGHT_URL,
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer {}'.format('invalid-token'),
         )
@@ -223,12 +224,12 @@ class TestFlightRoute:
     def test_get_specific_flight_with_valid_id_succeeds(
             self, client, saved_valid_admin_user_model_one,
             valid_user_one_token):
-        model = Flight(
-            **valid_flight_one, created_by=saved_valid_admin_user_model_one)
+        model = Flight(**valid_flight_one,
+                       created_by=saved_valid_admin_user_model_one)
         model.save()
 
         response = client.get(
-            '/api/v1/flight/{}'.format(model.id),
+            SINGLE_FLIGHT_URL.format(model.id),
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer {}'.format(valid_user_one_token),
         )
@@ -247,7 +248,7 @@ class TestFlightRoute:
 
         invalid_uuid = 'invalid-uuid'
         response = client.get(
-            '/api/v1/flight/{}'.format(invalid_uuid),
+            SINGLE_FLIGHT_URL.format(invalid_uuid),
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer {}'.format(valid_user_one_token),
         )
@@ -255,12 +256,12 @@ class TestFlightRoute:
 
     def test_get_specific_flight_with_invalid_token_fails(
             self, client, saved_valid_admin_user_model_one):
-        model = Flight(
-            **valid_flight_one, created_by=saved_valid_admin_user_model_one)
+        model = Flight(**valid_flight_one,
+                       created_by=saved_valid_admin_user_model_one)
         model.save()
 
         response = client.get(
-            '/api/v1/flight/{}'.format(model.id),
+            SINGLE_FLIGHT_URL.format(model.id),
             content_type='application/json',
             HTTP_AUTHORIZATION='Bearer {}'.format('invalid-token'),
         )

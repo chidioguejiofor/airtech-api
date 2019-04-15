@@ -2,8 +2,6 @@ from rest_framework import serializers
 from .models import Flight
 from ..utils.helpers.json_helpers import raise_error
 from ..utils.error_messages import serialization_errors
-from ..users.serializers import UserSerializer
-
 from django.utils import timezone
 from datetime import timedelta
 
@@ -11,18 +9,23 @@ from datetime import timedelta
 class FlightSerializer(serializers.ModelSerializer):
     capacity = serializers.IntegerField(min_value=1)
     type = serializers.CharField()
-    creator = UserSerializer(source='created_by', read_only=True)
-    currentPrice = serializers.DecimalField(
-        min_value=1, decimal_places=2, max_digits=100)
+    currentPrice = serializers.DecimalField(source='current_price',
+                                            min_value=1,
+                                            decimal_places=2,
+                                            max_digits=100)
     createdAt = serializers.DateTimeField(source='created_at', required=False)
     updatedAt = serializers.DateTimeField(source='updated_at', required=False)
 
     class Meta:
         model = Flight
         fields = ('id', 'capacity', 'location', 'destination', 'schedule',
-                  'currentPrice', 'type', 'creator', 'created_by', 'createdAt',
+                  'currentPrice', 'type', 'created_by', 'createdAt',
                   'updatedAt')
-        extra_kwargs = {'created_by': {'write_only': True}}
+        extra_kwargs = {
+            'created_by': {
+                'write_only': True
+            },
+        }
 
     def validate_type(self, validated_data):
         """Validates the flight type
@@ -42,17 +45,15 @@ class FlightSerializer(serializers.ModelSerializer):
         if validated_data in valid_types:
             return validated_data
 
-        raise_error(
-            serialization_errors['invalid_flight_type'],
-            raise_only_message=True)
+        raise_error(serialization_errors['invalid_flight_type'],
+                    raise_only_message=True)
 
     @staticmethod
     def validate_schedule(validated_data):
 
         if validated_data < timezone.now() - timedelta(hours=6):
-            raise_error(
-                serialization_errors['invalid_flight_schedule'],
-                raise_only_message=True)
+            raise_error(serialization_errors['invalid_flight_schedule'],
+                        raise_only_message=True)
         return validated_data
 
     def create(self, validated_data):

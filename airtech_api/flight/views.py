@@ -1,8 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.status import HTTP_201_CREATED, HTTP_404_NOT_FOUND
-from ..utils.helpers.json_helpers import (
-    generate_response, raise_error, generate_pagination_meta,
-    parse_paginator_request_query, retrieve_model_with_id)
+from ..utils.helpers.json_helpers import (generate_response, raise_error,
+                                          generate_pagination_meta,
+                                          parse_paginator_request_query,
+                                          retrieve_model_with_id)
 from .serializers import FlightSerializer
 from ..utils.error_messages import serialization_errors
 from ..utils.validators.token_validator import AdminTokenValidator, TokenValidator
@@ -39,9 +40,8 @@ class FlightView(APIView):
                 serializer.data,
                 success_messages['resource_created'].format('Flight'),
                 status_code=HTTP_201_CREATED)
-        raise_error(
-            serialization_errors['many_invalid_fields'],
-            err_dict=serializer.errors)
+        raise_error(serialization_errors['many_invalid_fields'],
+                    err_dict=serializer.errors)
 
     @staticmethod
     def get(request, format='json'):

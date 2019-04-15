@@ -6,9 +6,14 @@ valid_flight_one = {
     "location": "Popo York",
     "destination": "Lagos, Nigeria",
     "schedule": timezone.now() + timedelta(days=30),
-    "currentPrice": 4000.70,
+    "current_price": 4000.70,
     "type": "international"
 }
+
+camelized_valid_flight_one = dict(**valid_flight_one)
+camelized_valid_flight_one.pop('current_price', None)
+camelized_valid_flight_one['currentPrice'] = valid_flight_one.get(
+    'current_price')
 
 
 def generate_flight_with_timedelta_args(**timedelta_args):
@@ -17,6 +22,6 @@ def generate_flight_with_timedelta_args(**timedelta_args):
         "location": "Popo York",
         "destination": "Lagos, Nigeria",
         "schedule": timezone.now() + timedelta(**timedelta_args),
-        "currentPrice": 4000.70,
+        "current_price": 4000.70,
         "type": "international"
     }

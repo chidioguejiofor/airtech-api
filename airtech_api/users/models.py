@@ -7,13 +7,12 @@ from passlib.hash import pbkdf2_sha512
 class User(BaseModel):
     first_name = models.CharField(max_length=100, null=False)
     last_name = models.CharField(max_length=100, null=False)
-    gender = models.CharField(
-        choices=(
-            ('Male', 'Male'),
-            ('Female', 'Female'),
-        ),
-        null=False,
-        max_length=6)
+    gender = models.CharField(choices=(
+        ('Male', 'Male'),
+        ('Female', 'Female'),
+    ),
+                              null=False,
+                              max_length=6)
     date_of_birth = models.DateField(null=True)
     username = models.CharField(max_length=50, null=False, unique=True)
     password_hash = models.TextField()
