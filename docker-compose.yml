@@ -30,7 +30,7 @@ services:
 #   To build the dockerfile from the image uncomment the image key above and comment the build below
     build:
       context: ./
-      dockerfile: docker/Dockerfile
+      dockerfile: docker-dev/Dockerfile
 
     deploy:
       replicas: 5

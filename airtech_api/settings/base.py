@@ -15,7 +15,7 @@ import dj_database_url
 from dotenv import load_dotenv
 load_dotenv()
 
-DEBUG=True
+DEBUG = True
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # DJANGO_SETTINGS_MODULE= os.getenv('DJANGO_SETTINGS_MODULE', 'airtech_api.settings')
@@ -29,7 +29,9 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', True)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'airtech-api.herokuapp.com',
+]
 
 # Application definition
 
@@ -80,8 +82,8 @@ WSGI_APPLICATION = 'airtech_api.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 DATABASES = {
-    'default': dj_database_url.parse(
-        os.getenv('DATABASE_URI'), conn_max_age=600)
+    'default': dj_database_url.parse(os.getenv('DATABASE_URI'),
+                                     conn_max_age=600)
 }
 
 # Password validation
@@ -133,9 +135,10 @@ REST_FRAMEWORK = {
     'drf_toolbox.serializers.ModelSerializer',
 }
 
-
-ENVIRONMENT=os.getenv('ENVIRONMENT', 'development')
+ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
 
 if ENVIRONMENT.lower() == 'docker_dev':
     from .docker_dev import *
 
+if ENVIRONMENT.lower() == 'production':
+    DEBUG = False
