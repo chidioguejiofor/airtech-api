@@ -4,7 +4,7 @@ htmlcov
 
 airtech-api
 airtech-api-db
-
+**/*/__pycache__
 **/*/*.pyc
 celerybeat-schedule.db
 airtech-redis
