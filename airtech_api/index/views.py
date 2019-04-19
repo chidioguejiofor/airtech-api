@@ -14,3 +14,19 @@ def catch_all(request):
 @api_view(['GET', 'POST', 'PATCH', 'DELETE', 'PUT'])
 def welcome_message(request):
     return Response({'message': success_messages['welcome_message']})
+
+
+# @api_view(['POST', 'PATCH', 'DELETE', 'PUT'])
+# def test(request):
+#
+#     template = get_template('confirm-email.html')
+#     html_content = template.render({'confirm_link': 'https://faceboook.com'})
+#     mail_dict = {
+#         'subject': 'Now we are talking',
+#         'receiver': 'chidioguejiofor@gmail.com',
+#         'body': html_content,
+#     }
+#
+#     # import pdb; pdb.set_trace()
+#     send_mail_as_html(**mail_dict)
+#     return Response({'message': success_messages['welcome_message']})
