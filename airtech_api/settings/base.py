@@ -61,10 +61,12 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'airtech_api.urls'
 
+print(BASE_DIR)
+print(BASE_DIR + '/services/email_service/templates')
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR + '/services/email_service/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
