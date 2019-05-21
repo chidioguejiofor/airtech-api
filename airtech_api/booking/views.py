@@ -38,8 +38,8 @@ class BookingView(APIView):
         if serializer.is_valid(raise_exception=False):
 
             serializer.save()
-            return generate_response(serializer.data,
-                                     success_messages['booking_success'],
+            return generate_response(success_messages['booking_success'],
+                                     serializer.data,
                                      status_code=HTTP_201_CREATED)
         if 'non_field_errors' in serializer.errors:
 
@@ -47,9 +47,6 @@ class BookingView(APIView):
                         status_code=HTTP_409_CONFLICT)
 
         raise_error(serializer.errors['flight_model'][0])
-
-    def get(self, request):
-        return generate_response('Hello', 'Hi')
 
 
 class UserBookings(APIView):
@@ -69,8 +66,8 @@ class UserBookings(APIView):
         paginated_data = serialized.data
 
         paginated_response = generate_response(
-            paginated_data,
             success_messages['retrieved'].format('Bookings'),
+            paginated_data,
             meta=meta)
 
         return paginated_response

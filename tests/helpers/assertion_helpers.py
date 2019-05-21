@@ -50,3 +50,10 @@ def assert_resource_not_found(response, resource_name, bad_id):
            serialization_errors['resource_id_not_found'].format(
                resource_name, bad_id
            )
+
+
+def assert_send_mail_data(message_obj, **kwargs):
+    receiever_email = message_obj.personalizations[0].tos[0]['email']
+    assert message_obj.subject._subject == kwargs.get('subject')
+    assert message_obj.from_email.email == 'no-reply@airtech-api.com'
+    assert receiever_email == kwargs.get('receiver')

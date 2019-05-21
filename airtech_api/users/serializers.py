@@ -19,10 +19,9 @@ class LoginSerializer(serializers.Serializer):
 
         if user and user.verify_password(data['password']):
             return user
-        raise_error(
-            'The user with that username/email and password combination was not found',
-            status_code=HTTP_404_NOT_FOUND,
-            raise_only_message=True)
+        raise_error(serialization_errors['user_not_found'],
+                    status_code=HTTP_404_NOT_FOUND,
+                    raise_only_message=True)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -37,11 +36,12 @@ class UserSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(validators=[
         get_unique_validator(User, 'email'),
     ])
+    verified = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = User
         fields = ('id', 'firstName', 'gender', 'lastName', 'email', 'username',
-                  'password')
+                  'password', 'verified')
         extra_kwargs = {'password': {'write_only': True}}
 
     def validate_gender(self, validated_data):

@@ -3,9 +3,18 @@ import pytest
 
 from airtech_api.utils import success_messages
 from airtech_api.utils.error_messages import serialization_errors
-from airtech_api.utils.constants import FIELD_IS_REQUIRED_STR
+from airtech_api.utils.constants import FIELD_IS_REQUIRED_STR, CONFRIM_EMAIL_SUBJECT
 
 from tests.mocks.users import valid_json_user
+from airtech_api.services.email_service.send_mail import send_mail_as_html
+from tests.helpers.assertion_helpers import assert_send_mail_data
+
+# from pytest.
+from unittest.mock import Mock
+import smtplib
+from sendgrid import SendGridAPIClient
+
+SIGNUP_ENDPOINT = '/api/v1/auth/register'
 
 
 @pytest.mark.django_db
@@ -22,7 +31,9 @@ class TestSignupRoute:
 
         """
         empty_dict = {}
-        response = client.post('/api/v1/signup',
+        send_mail_as_html.delay = Mock(side_effect=send_mail_as_html)
+
+        response = client.post(SIGNUP_ENDPOINT,
                                data=empty_dict,
                                content_type="application/json")
         response_body = response.data
@@ -63,7 +74,7 @@ class TestSignupRoute:
             "password": "password"
         }
 
-        response = client.post('/api/v1/signup',
+        response = client.post(SIGNUP_ENDPOINT,
                                data=invalid_gender,
                                content_type="application/json")
         response_body = response.data
@@ -79,25 +90,20 @@ class TestSignupRoute:
         Returns:
             None
         """
+        send_mail_as_html.delay = Mock(side_effect=send_mail_as_html)
+        smtplib.SMTP = Mock()
         json_user = dict(**valid_json_user)
         json_user['gender'] = 'male'
-        response = client.post('/api/v1/signup',
+        response = client.post(SIGNUP_ENDPOINT,
                                data=json_user,
                                content_type="application/json")
         response_body = response.data
-        data = response_body['data']
 
         assert response.status_code == 201
+        assert 'data' not in response_body
         assert response_body['status'] == 'success'
         assert response_body['message'] == success_messages[
-            'auth_successful'].format("Sign Up")
-        assert 'id' in data
-        assert 'token' in data
-        assert 'password' not in data
-        assert data['gender'].lower() == 'male'
-        assert data['firstName'] == valid_json_user['firstName']
-        assert data['lastName'] == valid_json_user['lastName']
-        assert data['email'] == valid_json_user['email']
+            'confirm_mail'].format(valid_json_user['email'])
 
     def test_signup_with_gender_equals_female_succeeds(self, client):
         """Should return a welcome message to the user on GET /api
@@ -106,23 +112,23 @@ class TestSignupRoute:
         Returns:
             None
         """
+        send_mail_as_html.delay = Mock(side_effect=send_mail_as_html)
+        SendGridAPIClient.send = Mock(side_effect=lambda x: None)
         json_user = dict(**valid_json_user)
         json_user['gender'] = 'female'
 
-        response = client.post('/api/v1/signup',
+        response = client.post(SIGNUP_ENDPOINT,
                                data=json_user,
                                content_type="application/json")
         response_body = response.data
-        data = response_body['data']
 
+        message_obj = SendGridAPIClient.send.call_args[0][0]
+        assert 'data' not in response_body
         assert response.status_code == 201
         assert response_body['status'] == 'success'
         assert response_body['message'] == success_messages[
-            'auth_successful'].format("Sign Up")
-        assert 'id' in data
-        assert 'token' in data
-        assert 'password' not in data
-        assert data['gender'].lower() == valid_json_user['gender']
-        assert data['firstName'] == valid_json_user['firstName']
-        assert data['lastName'] == valid_json_user['lastName']
-        assert data['email'] == valid_json_user['email']
+            'confirm_mail'].format(valid_json_user['email'])
+
+        assert_send_mail_data(message_obj,
+                              receiver=json_user['email'],
+                              subject=CONFRIM_EMAIL_SUBJECT)
