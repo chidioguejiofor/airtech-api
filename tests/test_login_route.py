@@ -8,6 +8,8 @@ from airtech_api.utils.constants import FIELD_IS_REQUIRED_STR
 
 from tests.mocks.users import valid_user_three
 
+LOGIN_ENDPOINT = '/api/v1/auth/login'
+
 
 @pytest.mark.django_db
 class TestLoginRoute:
@@ -23,7 +25,7 @@ class TestLoginRoute:
 
         """
         empty_dict = {}
-        response = client.post('/api/v1/login',
+        response = client.post(LOGIN_ENDPOINT,
                                data=empty_dict,
                                content_type="application/json")
         response_body = response.data
@@ -60,7 +62,7 @@ class TestLoginRoute:
             'password': valid_user_three['password'],
         }
 
-        response = client.post('/api/v1/login',
+        response = client.post(LOGIN_ENDPOINT,
                                data=valid_data,
                                content_type="application/json")
         response_body = response.data
@@ -94,7 +96,7 @@ class TestLoginRoute:
             'password': valid_user_three['password'],
         }
 
-        response = client.post('/api/v1/login',
+        response = client.post(LOGIN_ENDPOINT,
                                data=valid_data,
                                content_type="application/json")
         response_body = response.data
@@ -124,7 +126,7 @@ class TestLoginRoute:
             'password': 'password',
         }
 
-        response = client.post('/api/v1/login',
+        response = client.post(LOGIN_ENDPOINT,
                                data=user_not_in_db_data,
                                content_type="application/json")
         response_body = response.data

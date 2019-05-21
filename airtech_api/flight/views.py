@@ -37,8 +37,8 @@ class FlightView(APIView):
             serializer.save()
 
             return generate_response(
-                serializer.data,
                 success_messages['resource_created'].format('Flight'),
+                serializer.data,
                 status_code=HTTP_201_CREATED)
         raise_error(serialization_errors['many_invalid_fields'],
                     err_dict=serializer.errors)
@@ -52,8 +52,8 @@ class FlightView(APIView):
         paginated_data = FlightSerializer(current_page_data, many=True).data
 
         paginated_response = generate_response(
-            paginated_data,
             success_messages['retrieved'].format('Flights'),
+            paginated_data,
             meta=meta)
 
         return paginated_response
@@ -74,4 +74,6 @@ class SingleFlightView(APIView):
         json_flight = FlightSerializer(flight).data
 
         return generate_response(
-            json_flight, success_messages['retrieved'].format('Flight'))
+            success_messages['retrieved'].format('Flight'),
+            json_flight,
+        )

@@ -18,7 +18,7 @@ class User(BaseModel):
     password_hash = models.TextField()
     email = models.EmailField(null=False, unique=True)
     admin = models.BooleanField(default=False)
-
+    verified = models.BooleanField(default=False)
     _password = None
 
     class Meta:

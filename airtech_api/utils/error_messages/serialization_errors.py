@@ -9,6 +9,10 @@ msg_dict = {
     'The {} you inputted already exists',
     'user_not_found':
     'The user with that username/email and password combination was not found',
+    'email_not_found':
+    'A user with email `{}` does not exist',
+    'user_already_verified':
+    'The user with that email has already been verified',
     'invalid_flight_type':
     'Flight type must be either international or local',
     'invalid_flight_schedule':

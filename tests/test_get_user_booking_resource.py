@@ -68,7 +68,7 @@ class TestFlightRoute:
         assert meta['nextPageNumber'] == 3
         assert meta['itemsPerPage'] == 5
 
-    def test_get_all_flights_with_valid_admin_token_succeeds(
+    def test_get_bookings_with_valid_admin_token_succeeds(
             self, client, valid_admin_user_token):
 
         response = client.get(

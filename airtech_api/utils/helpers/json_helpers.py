@@ -6,18 +6,20 @@ from rest_framework.response import Response
 from rest_framework import serializers
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 from datetime import datetime, timedelta
+from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 
 
-def generate_response(response_data,
-                      message,
+def generate_response(message,
+                      response_data=None,
                       status_code=HTTP_200_OK,
                       meta=None):
     data = {
         'status': 'success',
         'message': message,
-        'data': response_data,
     }
+    if response_data is not None:
+        data['data'] = response_data
     if isinstance(meta, dict):
         data['meta'] = meta
 
@@ -50,18 +52,31 @@ def add_token_to_response(user_data, exp=None):
     Returns:
 
     """
-    if not exp:
-        exp = datetime.utcnow() + timedelta(weeks=1)
     token_data = {
         'id': user_data['id'],
         'username': user_data['username'],
         'email': user_data['email'],
-        'exp': exp
     }
-    user_data['token'] = jwt.encode(token_data,
-                                    os.getenv('JWT_SCRET_KEY'),
-                                    algorithm='HS256')
+
+    if exp:
+        token_data['exp'] = exp
+    user_data['token'] = generate_token(token_data)
     return user_data
+
+
+def generate_token(token_data):
+    """Returns a decodes a dict into a token
+
+    Args:
+        token_data: the data to be tokenized
+    Returns:
+
+    """
+    if 'exp' not in token_data:
+        token_data['exp'] = datetime.utcnow() + timedelta(minutes=30)
+    return jwt.encode(token_data,
+                      os.getenv('JWT_SCRET_KEY'),
+                      algorithm='HS256').decode('ascii')
 
 
 def generate_pagination_meta(paginator, page):

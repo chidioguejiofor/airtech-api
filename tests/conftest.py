@@ -2,7 +2,7 @@ import pytest
 from airtech_api.users.models import User
 from airtech_api.flight.models import Flight
 from airtech_api.booking.models import Booking
-from airtech_api.utils.helpers.json_helpers import add_token_to_response
+from airtech_api.utils.helpers.json_helpers import add_token_to_response, generate_token
 from tests.mocks.users import valid_admin_user, valid_user_one
 from tests.mocks.flight import (
     valid_flight_one,
@@ -10,6 +10,7 @@ from tests.mocks.flight import (
 )
 from tests.mocks.booking import (generate_booking_model_data_with_timedelta)
 from datetime import datetime, timedelta
+from airtech_api.utils.constants import CONFIRM_EMAIL_TYPE, TEST_HOST_NAME
 
 
 @pytest.fixture(scope='function')
@@ -138,7 +139,7 @@ def valid_admin_user_token(saved_valid_admin_user_model_one):
         str(saved_valid_admin_user_model_one.id),
         'email':
         saved_valid_admin_user_model_one.email,
-    })['token'].decode('ascii')
+    })['token']
 
 
 @pytest.fixture(scope='function')
@@ -147,7 +148,49 @@ def valid_user_one_token(saved_valid_user_one):
         'username': saved_valid_user_one.username,
         'id': str(saved_valid_user_one.id),
         'email': saved_valid_user_one.email,
-    })['token'].decode('ascii')
+    })['token']
+
+
+@pytest.fixture(scope='function')
+def valid_user_one_confirm_account_token(saved_valid_user_one):
+    token_data = {
+        'email': saved_valid_user_one.email,
+        'type': CONFIRM_EMAIL_TYPE,
+        'redirect_url': 'http://{}/login'.format(TEST_HOST_NAME),
+        'exp': datetime.utcnow() + timedelta(minutes=5)
+    }
+    return generate_token(token_data)
+
+
+@pytest.fixture(scope='function')
+def invalid_confirm_account_token(saved_valid_user_one):
+    token_data = {
+        'redirect_url': 'http://{}/login'.format(TEST_HOST_NAME),
+        'exp': datetime.utcnow() + timedelta(minutes=5)
+    }
+    return generate_token(token_data)
+
+
+@pytest.fixture(scope='function')
+def expired_user_one_confirm_account_token(saved_valid_user_one):
+    token_data = {
+        'email': saved_valid_user_one.email,
+        'type': CONFIRM_EMAIL_TYPE,
+        'redirect_url': 'http://{}/login'.format(TEST_HOST_NAME),
+        'exp': datetime.utcnow() - timedelta(minutes=5)
+    }
+    return generate_token(token_data)
+
+
+@pytest.fixture(scope='function')
+def non_existing_user_confirm_account_token(saved_valid_user_one):
+    token_data = {
+        'email': 'non-existing@email.com',
+        'type': CONFIRM_EMAIL_TYPE,
+        'redirect_url': 'http://{}/login'.format(TEST_HOST_NAME),
+        'exp': datetime.utcnow() + timedelta(minutes=5)
+    }
+    return generate_token(token_data)
 
 
 @pytest.fixture(scope='function')
@@ -159,4 +202,4 @@ def expired_token_for_user_one(saved_valid_user_one):
             'id': str(saved_valid_user_one.id),
             'email': saved_valid_user_one.email,
         },
-        exp=exp_time)['token'].decode('ascii')
+        exp=exp_time)['token']

@@ -17,6 +17,7 @@ passlib = "*"
 pyjwt = "*"
 celery = "*"
 redis = "*"
+sendgrid = "*"
 
 [dev-packages]
 yapf = "*"
