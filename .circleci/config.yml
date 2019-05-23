@@ -1,5 +1,17 @@
 version: 2 # use CircleCI 2.0
 
+docker_setup: &docker_setup
+  docker: # run the steps with Docker
+    # CircleCI Python images available at: https://hub.docker.com/r/circleci/python/
+    - image: circleci/python:3.7.0
+      environment: # environment variables for primary container
+        PIPENV_VENV_IN_PROJECT: true
+        DATABASE_URI: $DATABASE_URI
+        SECRET_KEY: $SECRET_KEY
+        CC_TEST_REPORTER_ID: $CC_TEST_REPORTER_ID
+    # CircleCI PostgreSQL images available at: https://hub.docker.com/r/circleci/postgres/
+    - image: circleci/postgres:10.4
+
 restore_cache: &run_restore_cache
   restore_cache:
     # Read about caching dependencies: https://circleci.com/docs/2.0/caching/
@@ -38,17 +50,8 @@ generate_coverage_report: &generate_coverage_report
 
 jobs: # A basic unit of work in a run
   build:
+    <<: *docker_setup
     working_directory: ~/repo
-    docker: # run the steps with Docker
-      # CircleCI Python images available at: https://hub.docker.com/r/circleci/python/
-      - image: circleci/python:3.7.0
-        environment: # environment variables for primary container
-          PIPENV_VENV_IN_PROJECT: true
-          DATABASE_URI: $DATABASE_URI
-          SECRET_KEY: $SECRET_KEY
-          CC_TEST_REPORTER_ID: $CC_TEST_REPORTER_ID
-      # CircleCI PostgreSQL images available at: https://hub.docker.com/r/circleci/postgres/
-      - image: circleci/postgres:10.4
     steps: # steps that comprise the `build` job
       - checkout # check out source code to working directory
       - run: sudo chown -R circleci:circleci /usr/local/bin
@@ -56,6 +59,57 @@ jobs: # A basic unit of work in a run
       - *run_restore_cache
       - run: *install_dependencies
       - save_cache: *save_cache
+
+  run_test_and_upload_coverage:
+    <<: *docker_setup
+    working_directory: ~/repo-test-dir
+    steps:
+      - checkout
+      - run: sudo chown -R circleci:circleci /usr/local/bin
+      - run: sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
+      - *run_restore_cache
+      - run: *install_dependencies
       - run: *run_tests
+      - save_cache: *save_cache
       - run: *setup_codeclimate
       - run: *generate_coverage_report
+
+  deploy:
+    <<: *docker_setup
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install Heroku and Login
+          command: |
+            env >> .env
+            # install heroku CLI
+            curl https://cli-assets.heroku.com/install.sh | sh
+            # login to heroku docker registry
+            heroku container:login
+            # Login to heroku registry
+            echo $HEROKU_API_KEY | docker login --username=$HEROKU_USERNAME --password-stdin registry.heroku.com
+
+      - run:
+          name: Build Dockerfile
+          command: |
+            docker build -t registry.heroku.com/$HEROKU_APP_NAME/web -f docker-heroku/Dockerfile .
+            docker push registry.heroku.com/$HEROKU_APP_NAME/web
+      - run:
+          name: Deploy to heroku
+          command: |
+            heroku container:release web --app $HEROKU_APP_NAME
+
+workflows:
+  version: 2
+  run_test_and_deploy_app:
+      jobs:
+        - run_test_and_upload_coverage
+        - deploy:
+            requires:
+              - run_test_and_upload_coverage
+            filters:
+              branches:
+                only:
+                  - staging
+
