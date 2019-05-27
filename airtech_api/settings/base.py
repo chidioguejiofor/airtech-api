@@ -13,7 +13,16 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import os
 import dj_database_url
 from dotenv import load_dotenv
+import cloudinary
+
 load_dotenv()
+
+CLOUD_API_KEY = os.getenv('CLOUDINARY_API_KEY')
+CLOUDINARY_SECRET = os.getenv('CLOUDINARY_SECRET')
+CLOUDINARY_NAME = os.getenv('CLOUDINARY_NAME')
+cloudinary.config(cloud_name=CLOUDINARY_NAME,
+                  api_key=CLOUD_API_KEY,
+                  api_secret=CLOUDINARY_SECRET)
 
 DEBUG = True
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -130,7 +139,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS':
     'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
-    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+    # 'TEST_REQUEST_DEFAULT_FORMAT': 'json',
     'DEFAULT_MODEL_SERIALIZER_CLASS':
     'drf_toolbox.serializers.ModelSerializer',
 }

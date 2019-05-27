@@ -19,6 +19,8 @@ class User(BaseModel):
     email = models.EmailField(null=False, unique=True)
     admin = models.BooleanField(default=False)
     verified = models.BooleanField(default=False)
+    image_url = models.URLField(null=True)
+    image_public_id = models.CharField(max_length=50, null=True)
     _password = None
 
     class Meta:

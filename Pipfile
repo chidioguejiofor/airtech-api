@@ -18,6 +18,9 @@ pyjwt = "*"
 celery = "*"
 redis = "*"
 sendgrid = "*"
+cloudinary = "*"
+pillow = "*"
+pytest-env = "*"
 
 [dev-packages]
 yapf = "*"

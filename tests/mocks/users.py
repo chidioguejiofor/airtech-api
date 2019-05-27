@@ -1,3 +1,5 @@
+from io import StringIO
+import os
 valid_user_one = {
     "username": "newUser",
     "first_name": "Fred",
