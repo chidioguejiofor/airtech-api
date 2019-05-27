@@ -5,18 +5,28 @@ from .serializers import UserSerializer, LoginSerializer
 from ..utils.helpers.json_helpers import generate_response, raise_error, add_token_to_response
 from ..utils import success_messages
 from ..utils.error_messages import serialization_errors, tokenization_errors
-from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED
+from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_202_ACCEPTED
 from ..utils.validators.token_validator import TokenValidator
 from ..utils.constants import CONFIRM_EMAIL_TYPE
 from django.http import HttpResponseRedirect
-from .models import User
 from rest_framework.decorators import api_view
-
+from rest_framework.parsers import MultiPartParser, JSONParser, FormParser, FileUploadParser
 from ..utils.helpers.email_helpers import send_confirm_mail
+
+from airtech_api.services.cloudinary import upload_profile_picture
+
+from airtech_api.users.models import User
+from datetime import datetime, timedelta
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import UploadedFile
+
+import os
 
 
 class SignupView(APIView):
-    def post(self, request):
+    @staticmethod
+    def post(request):
         """
         Saves a new user to the app
 
@@ -41,7 +51,8 @@ class SignupView(APIView):
 
 
 class ConfirmView(APIView):
-    def get(self, request, **kwargs):
+    @staticmethod
+    def get(request, **kwargs):
         token = kwargs.get('token', '')
         decoded = TokenValidator.decode_token(token)
         type_is_not_valid = decoded.get('type') != CONFIRM_EMAIL_TYPE
@@ -61,7 +72,8 @@ class ConfirmView(APIView):
 
 
 class LoginView(APIView):
-    def post(self, request, format='json'):
+    @staticmethod
+    def post(request):
         """
         Saves a new user to the app
 
@@ -74,7 +86,9 @@ class LoginView(APIView):
         if serializer.is_valid(raise_exception=False):
             user = serializer.validated_data
             serialized_user = UserSerializer(user).data
-            serialization_data = add_token_to_response(serialized_user)
+            serialization_data = add_token_to_response(serialized_user,
+                                                       exp=datetime.now() +
+                                                       timedelta(days=4))
 
             return generate_response(
                 success_messages['auth_successful'].format('Login'),
@@ -104,3 +118,44 @@ def resend_email(request):
 
     send_confirm_mail(user.email, server_host, client_host)
     return generate_response(success_messages['confirm_mail'].format(email))
+
+
+class UserProfilePicture(APIView):
+    parser_classes = (
+        MultiPartParser,
+        JSONParser,
+    )
+    permission_classes = [TokenValidator]
+
+    @staticmethod
+    def patch(request):
+        file = request.data.get('picture')
+        if not file:
+            raise_error(serialization_errors['many_invalid_fields'],
+                        err_dict={
+                            'picture': serialization_errors['missing_field'],
+                        })
+        if not isinstance(file, UploadedFile):
+            raise_error(serialization_errors['many_invalid_fields'],
+                        err_dict={
+                            'picture':
+                            serialization_errors['value_not_a_file'],
+                        })
+        user = request.decoded_user
+        octet_stream_is_valid = file.content_type == 'application/octet-stream' and os.getenv(
+            'ENVIRONMENT') == 'test'
+        file_is_image = file.content_type.split('/')[0] == 'image'
+
+        if not octet_stream_is_valid and not file_is_image:
+            raise_error(serialization_errors['not_an_image'])
+
+        file_size = file.size
+        if file_size > 2_000_000:
+            raise_error(serialization_errors['image_too_large'])
+
+        file_name = str(user.id) + datetime.now().strftime('%c') + '.jpg'
+        default_storage.save(file_name, ContentFile(file.read()))
+        upload_profile_picture.delay(user.id, user.image_public_id, file_name)
+
+        return generate_response('Your request is being processed.',
+                                 status_code=HTTP_202_ACCEPTED)

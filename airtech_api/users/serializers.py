@@ -32,7 +32,7 @@ class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(validators=[
         get_unique_validator(User, 'username'),
     ])
-
+    imageUrl = serializers.URLField(source='image_url', required=False)
     email = serializers.EmailField(validators=[
         get_unique_validator(User, 'email'),
     ])
@@ -41,7 +41,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'firstName', 'gender', 'lastName', 'email', 'username',
-                  'password', 'verified')
+                  'password', 'verified', 'imageUrl')
         extra_kwargs = {'password': {'write_only': True}}
 
     def validate_gender(self, validated_data):
