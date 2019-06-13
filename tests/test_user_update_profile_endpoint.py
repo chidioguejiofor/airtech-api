@@ -1,16 +1,12 @@
 # Third Party Libraries
 import pytest
-from tempfile import NamedTemporaryFile
 from airtech_api.utils.error_messages import serialization_errors
 from airtech_api.users.models import User
-from tests.helpers.assertion_helpers import assert_token_is_invalid, assert_expired_token
 import cloudinary.uploader
 from airtech_api.services.cloudinary import upload_profile_picture
 
 from unittest.mock import Mock
-from django.core.files.images import ImageFile
 from rest_framework.test import APIClient
-from PIL import Image
 import os
 django_client = APIClient()
 PROFILE_PICTURE_ENDPOINT = '/api/v1/user/profile/picture'
@@ -72,7 +68,7 @@ class TestUpdateProfilePictureEndpoint:
             'value_not_a_file']
 
     def test_update_profile_picture_throws_error_does_not_break_code_succeeds(
-            self, client, saved_valid_user_one, valid_user_one_token):
+            self, client, saved_valid_user_one, valid_user_one_token, low_resolution_image_file):
         """Should fail when the picture is missing in the request
 
         Args:
@@ -85,17 +81,9 @@ class TestUpdateProfilePictureEndpoint:
         cloudinary.uploader.upload = Mock(side_effect=Exception())
         cloudinary.uploader.destroy = Mock(side_effect=lambda *args: None)
 
-        filename = os.path.dirname(__file__) + '/mocks/test_image.jpg'
-        image = Image.open(filename)
-
-        picture = NamedTemporaryFile()
-        image.save(picture, format="JPEG")
-
-        picture.seek(0)
-
         response = django_client.patch(
             PROFILE_PICTURE_ENDPOINT,
-            {'picture': picture},
+            {'picture': low_resolution_image_file},
             format="multipart",
             HTTP_AUTHORIZATION='Bearer {}'.format(valid_user_one_token),
         )
@@ -114,7 +102,7 @@ class TestUpdateProfilePictureEndpoint:
         assert user.image_url is None
 
     def test_update_profile_picture_with_large_file_fails(
-            self, client, saved_valid_user_one, valid_user_one_token):
+            self, client, saved_valid_user_one, valid_user_one_token, high_resolution_image_file):
         """Should fail when the picture is missing in the request
 
         Args:
@@ -133,16 +121,11 @@ class TestUpdateProfilePictureEndpoint:
 
         filename = os.path.dirname(
             __file__) + '/mocks/high resolution image.png'
-        image = Image.open(filename)
 
-        picture = NamedTemporaryFile()
-        image.save(picture, format="PNG")
-
-        picture.seek(0)
 
         response = django_client.patch(
             PROFILE_PICTURE_ENDPOINT,
-            {'picture': picture},
+            {'picture': high_resolution_image_file},
             format="multipart",
             HTTP_AUTHORIZATION='Bearer {}'.format(valid_user_one_token),
         )
@@ -154,7 +137,7 @@ class TestUpdateProfilePictureEndpoint:
             'image_too_large']
 
     def test_update_profile_picture_with_a_valid_image_succeeds(
-            self, client, saved_valid_user_one, valid_user_one_token):
+            self, client, saved_valid_user_one, valid_user_one_token, low_resolution_image_file):
         """Should fail when the picture is missing in the request
 
         Args:
@@ -172,17 +155,9 @@ class TestUpdateProfilePictureEndpoint:
             side_effect=lambda *args: cloudinary_return)
         cloudinary.uploader.destroy = Mock(side_effect=lambda *args: None)
 
-        filename = os.path.dirname(__file__) + '/mocks/test_image.jpg'
-        image = Image.open(filename)
-
-        picture = NamedTemporaryFile()
-        image.save(picture, format="JPEG")
-
-        picture.seek(0)
-
         response = django_client.patch(
             PROFILE_PICTURE_ENDPOINT,
-            {'picture': picture},
+            {'picture': low_resolution_image_file},
             format="multipart",
             HTTP_AUTHORIZATION='Bearer {}'.format(valid_user_one_token),
         )
@@ -204,7 +179,7 @@ class TestUpdateProfilePictureEndpoint:
         assert user.image_url == cloudinary_return['secure_url']
 
     def test_delete_existing_cloudinary_image_if_user_had_one_succeeds(
-            self, client, saved_valid_user_one, valid_user_one_token):
+            self, client, saved_valid_user_one, valid_user_one_token, low_resolution_image_file):
         """Should fail when the picture is missing in the request
 
         Args:
@@ -229,18 +204,9 @@ class TestUpdateProfilePictureEndpoint:
         cloudinary.uploader.upload = Mock(
             side_effect=lambda *args: cloudinary_return)
         cloudinary.uploader.destroy = Mock(side_effect=lambda *args: None)
-
-        filename = os.path.dirname(__file__) + '/mocks/test_image.jpg'
-        image = Image.open(filename)
-
-        picture = NamedTemporaryFile()
-        image.save(picture, format="JPEG")
-
-        picture.seek(0)
-
         response = django_client.patch(
             PROFILE_PICTURE_ENDPOINT,
-            {'picture': picture},
+            {'picture': low_resolution_image_file},
             format="multipart",
             HTTP_AUTHORIZATION='Bearer {}'.format(valid_user_one_token),
         )
