@@ -19,8 +19,8 @@ celery = "*"
 redis = "*"
 sendgrid = "*"
 cloudinary = "*"
-pillow = "*"
 pytest-env = "*"
+rave-python = "*"
 
 [dev-packages]
 yapf = "*"

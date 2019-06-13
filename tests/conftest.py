@@ -11,7 +11,8 @@ from tests.mocks.flight import (
 from tests.mocks.booking import (generate_booking_model_data_with_timedelta)
 from datetime import datetime, timedelta
 from airtech_api.utils.constants import CONFIRM_EMAIL_TYPE, TEST_HOST_NAME
-
+from tempfile import TemporaryFile
+import os
 
 @pytest.fixture(scope='function')
 def saved_valid_user_one(transactional_db):
@@ -203,3 +204,27 @@ def expired_token_for_user_one(saved_valid_user_one):
             'email': saved_valid_user_one.email,
         },
         exp=exp_time)['token']
+
+
+@pytest.fixture(scope="session")
+def low_resolution_image_file():
+    filename = os.path.dirname(__file__) + '/mocks/test_image.jpg'
+    with TemporaryFile() as picture:
+        with open(filename, 'rb') as jpg:
+            for item in jpg:
+                picture.write(item)
+
+        picture.seek(0)
+        yield picture
+
+
+@pytest.fixture(scope="session")
+def high_resolution_image_file():
+    filename = os.path.dirname(__file__) + '/mocks/high resolution image.png'
+    with TemporaryFile() as picture:
+        with open(filename, 'rb') as jpg:
+            for item in jpg:
+                picture.write(item)
+
+        picture.seek(0)
+        yield picture
