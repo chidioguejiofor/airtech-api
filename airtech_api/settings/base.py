@@ -43,6 +43,7 @@ ALLOWED_HOSTS = ['airtech-api.herokuapp.com', 'localhost']
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',
     'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -57,6 +58,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -116,7 +119,8 @@ AUTH_PASSWORD_VALIDATORS = [
         'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_HEADERS = '*'
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
@@ -150,6 +154,6 @@ if ENVIRONMENT.lower() == 'docker_dev':
     from .docker_dev import *
 
 if ENVIRONMENT.lower() != 'production':
-    ALLOWED_HOSTS.append('127.0.0.1')
+    ALLOWED_HOSTS.append('*')
 if ENVIRONMENT.lower() == 'production':
     DEBUG = False

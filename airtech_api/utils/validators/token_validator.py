@@ -14,10 +14,14 @@ class TokenValidator(BasePermission):
     validation_error_message = tokenization_errors['token_is_invalid']
     validation_status_code = HTTP_401_UNAUTHORIZED
 
+    def _is_current_method_protected(self, request, view):
+        return hasattr(view, 'protected_methods'
+                       ) and request.method not in view.protected_methods
+
     def has_permission(self, request, view):
 
-        # if request.method not in view.protected_methods:
-        #     return True
+        if self._is_current_method_protected(request, view):
+            return True
 
         if 'Authorization' not in request.headers:
             raise_error(tokenization_errors['missing_token'],
@@ -39,7 +43,6 @@ class TokenValidator(BasePermission):
                         status_code=self.validation_status_code)
 
         request.decoded_user = user
-
         return True
 
     @staticmethod

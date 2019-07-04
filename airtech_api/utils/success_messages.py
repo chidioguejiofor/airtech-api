@@ -11,4 +11,6 @@ msg_dict = {
     'You have successfully booked this Flight',
     'confirm_mail':
     'A confirmation email was sent to {}, please confirm your account.',
+    'payment_url_created':
+    "The payment URL has been created, You can make your payments here"
 }

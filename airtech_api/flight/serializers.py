@@ -9,10 +9,7 @@ from datetime import timedelta
 class FlightSerializer(serializers.ModelSerializer):
     capacity = serializers.IntegerField(min_value=1)
     type = serializers.CharField()
-    currentPrice = serializers.DecimalField(source='current_price',
-                                            min_value=1,
-                                            decimal_places=2,
-                                            max_digits=100)
+    currentPrice = serializers.IntegerField(source='current_price')
     createdAt = serializers.DateTimeField(source='created_at', required=False)
     updatedAt = serializers.DateTimeField(source='updated_at', required=False)
 

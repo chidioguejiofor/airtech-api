@@ -115,12 +115,14 @@ def parse_paginator_request_query(query_params, queryset):
     return paginator, page
 
 
-def retrieve_model_with_id(model, model_id, *err_args, **err_kwargs):
+def retrieve_model_with_id(model, model_id, *err_args, **kwargs):
+    extra_filters = kwargs.pop('extra_filters_', {})
     try:
-        model_instance = model.objects.filter(id=model_id).first()
+        model_instance = model.objects.filter(id=model_id,
+                                              **extra_filters).first()
         if not model_instance:
             raise ValidationError('')
     except ValidationError:
-        raise_error(*err_args, HTTP_404_NOT_FOUND, **err_kwargs)
+        raise_error(*err_args, HTTP_404_NOT_FOUND, **kwargs)
 
     return model_instance

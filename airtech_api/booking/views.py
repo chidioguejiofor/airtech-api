@@ -1,5 +1,11 @@
+from django.http import HttpResponseRedirect
 from rest_framework.views import APIView
 from rest_framework.status import HTTP_201_CREATED, HTTP_409_CONFLICT
+import requests
+import os
+from django.http import QueryDict
+import json
+from django.core.validators import URLValidator
 from ..utils.helpers.json_helpers import (generate_response, raise_error,
                                           retrieve_model_with_id,
                                           parse_paginator_request_query,
@@ -10,7 +16,7 @@ from ..utils.error_messages import serialization_errors
 from ..utils.validators.token_validator import TokenValidator
 from ..utils import success_messages
 from ..flight.models import Flight
-
+from ..utils.constants import PAYSTACK_INITIALIZE_URL
 from .models import Booking
 
 
@@ -71,3 +77,117 @@ class UserBookings(APIView):
             meta=meta)
 
         return paginated_response
+
+
+class UserPayment(APIView):
+    permission_classes = [TokenValidator]
+    protected_methods = ['POST']
+
+    def get(self, request, id):
+        reference = request.query_params['reference']
+        response = None
+        try:
+            response = requests.get(
+                f'https://api.paystack.co/transaction/verify/{reference}',
+                headers={
+                    "Authorization":
+                    "Bearer {}".format(os.getenv('PAYSTACK_SECRET'))
+                })
+        except Exception:
+            raise_error(serialization_errors['paystack_threw_error'])
+
+        payment_details = response.json()
+        payment_data = payment_details['data']
+        metadata = payment_data['metadata']
+        callback_url = metadata.get("callbackURL", "/")
+        if not payment_details['status']:
+            redirect_url = self.generate_redirect_url(
+                callback_url,
+                success='false',
+                bookingId=metadata['bookingId'],
+                message=payment_details.get('message', 'An error occured'))
+        elif payment_data['status'] != 'success':
+            redirect_url = self.generate_redirect_url(
+                callback_url,
+                success='false',
+                bookingId=metadata['bookingId'],
+                message=payment_data['gateway_response'])
+        else:
+            booking = retrieve_model_with_id(Booking, metadata['bookingId'])
+            booking.paid_at = payment_data['paid_at']
+            booking.save()
+            redirect_url = self.generate_redirect_url(
+                callback_url,
+                success='true',
+                bookingId=metadata['bookingId'],
+                message=payment_data.get('gateway_response',
+                                         'Payment Successful'))
+        return HttpResponseRedirect(redirect_to=redirect_url, status=303)
+
+    @staticmethod
+    def generate_redirect_url(callback_url, *args, **kwargs):
+        q = QueryDict(mutable=True)
+        for query_string, value in kwargs.items():
+            q[query_string] = value
+        query_string = q.urlencode()
+        return f'{callback_url}?{query_string}'
+
+    @staticmethod
+    def post(request, id):
+        user = request.decoded_user
+
+        filter_args = dict(created_by=user.id)
+
+        booking = retrieve_model_with_id(
+            Booking,
+            id,
+            serialization_errors['resource_id_not_found'].format(
+                'Booking', id),
+            extra_filters=filter_args,
+        )
+
+        if booking.paid_at:
+            raise_error(serialization_errors['booking_already_paid'])
+
+        if booking.has_expired():
+            raise_error(serialization_errors['booking_expired'])
+
+        callback_url = request.data.get('callbackURL')
+        try:
+            validate = URLValidator(schemes=['http', 'https'])
+            validate(callback_url)
+        except Exception as e:
+            raise_error(
+                'The `callbackURL` field must be a valid URL with protocols `http` or `https`'
+            )
+
+        try:
+            response = requests.post(
+                PAYSTACK_INITIALIZE_URL,
+                data={
+                    'amount':
+                    booking.ticket_price,
+                    'email':
+                    user.email,
+                    'metadata':
+                    json.dumps({
+                        'bookingId': str(booking.id),
+                        'username': user.username,
+                        'email': user.email,
+                        'callbackURL': callback_url,
+                    }),
+                    'callback_url':
+                    f'http://{request.get_host()}/api/v1/user/bookings/{id}/payment'
+                },
+                headers={
+                    "Authorization":
+                    "Bearer {}".format(os.getenv('PAYSTACK_SECRET'))
+                })
+            data = response.json()['data']
+            return generate_response(
+                success_messages['payment_url_created'],
+                {'paymentLink': data['authorization_url']},
+                200,
+            )
+        except Exception:
+            raise_error(serialization_errors['payment_link_error'])

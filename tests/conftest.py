@@ -8,11 +8,13 @@ from tests.mocks.flight import (
     valid_flight_one,
     generate_flight_with_timedelta_args,
 )
+from django.utils import timezone
 from tests.mocks.booking import (generate_booking_model_data_with_timedelta)
 from datetime import datetime, timedelta
 from airtech_api.utils.constants import CONFIRM_EMAIL_TYPE, TEST_HOST_NAME
 from tempfile import TemporaryFile
 import os
+
 
 @pytest.fixture(scope='function')
 def saved_valid_user_one(transactional_db):
@@ -60,6 +62,20 @@ def saved_bulk_inserted_flights(transactional_db,
 
     saved_flights = Flight.objects.bulk_create(flights)
     return saved_flights
+
+
+@pytest.fixture(scope='function')
+def expired_booking(transactional_db, saved_valid_user_one,
+                    saved_flight_with_days_to_flight_gt_60):
+    booking = Booking(
+        **generate_booking_model_data_with_timedelta(
+            saved_valid_user_one,
+            paid=False,
+            flight_model=saved_flight_with_days_to_flight_gt_60),
+        expiry_date=timezone.now() - timedelta(days=10),
+    )
+    booking.save()
+    return booking
 
 
 @pytest.fixture(scope='function')
