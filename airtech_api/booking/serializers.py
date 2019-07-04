@@ -11,20 +11,20 @@ from django.utils import timezone
 class BookingSerializer(serializers.ModelSerializer):
     bookedBy = UserSerializer(source='created_by', read_only=True)
     flight = FlightSerializer(source='flight_model', required=False)
-    ticketPrice = serializers.DecimalField(source='ticket_price',
-                                           decimal_places=2,
-                                           max_digits=100,
+    ticketPrice = serializers.IntegerField(source='ticket_price',
                                            read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', required=False)
     updatedAt = serializers.DateTimeField(source='updated_at', read_only=True)
     expiryDate = serializers.DateTimeField(source='expiry_date',
                                            read_only=True)
+    paidAt = serializers.DateTimeField(source='paid_at', read_only=True)
+    paid = serializers.SerializerMethodField()
 
     class Meta:
         model = Booking
         fields = ('id', 'ticketPrice', 'flight_model', 'flight', 'bookedBy',
                   'createdAt', 'created_by', 'updatedAt', 'ticket_price',
-                  'ticketPrice', 'expiryDate', 'paid')
+                  'ticketPrice', 'expiryDate', 'paid', 'paidAt')
 
         extra_kwargs = {
             'ticket_price': {
@@ -43,6 +43,10 @@ class BookingSerializer(serializers.ModelSerializer):
                 message=serialization_errors['user_book_flight_twice'],
                 fields=('flight_model', 'created_by'))
         ]
+
+    @staticmethod
+    def get_paid(booking):
+        return bool(booking.paid_at)
 
     @staticmethod
     def validate_flight_model(validated_data):

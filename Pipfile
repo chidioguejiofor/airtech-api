@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = "*"
+django = ">=2.2.3"
 djangorestframework = "*"
 dj-database-url = "*"
 "psycopg2" = "*"
@@ -20,7 +20,8 @@ redis = "*"
 sendgrid = "*"
 cloudinary = "*"
 pytest-env = "*"
-rave-python = "*"
+django-cors-headers = "*"
+requests = "*"
 
 [dev-packages]
 yapf = "*"

@@ -1,6 +1,7 @@
 import pytest
 
 from airtech_api.utils import success_messages
+from airtech_api.booking.models import Booking
 from airtech_api.utils.error_messages import serialization_errors
 from airtech_api.flight.models import Flight
 from datetime import datetime, timedelta
@@ -18,7 +19,7 @@ SINGLE_FLIGHT_URL = '/api/v1/user/bookings'
 
 
 @pytest.mark.django_db
-class TestFlightRoute:
+class TestUserBookingRoute:
 
     # GET ALL
     def test_get_all_bookings_with_valid_token_succeeds(
@@ -106,3 +107,13 @@ class TestFlightRoute:
             HTTP_AUTHORIZATION='Bearer {}'.format(uuid4()),
         )
         assert_token_is_invalid(response)
+
+
+@pytest.mark.django_db
+class TestBookingModel:
+    def test_cannot_save_booking_with_no_expiry_date(
+            self, saved_bulk_inserted_bookings_for_user_one):
+        booking_one = saved_bulk_inserted_bookings_for_user_one[0]
+        booking_one.expiry_date = None
+        with pytest.raises(Exception):
+            assert booking_one.save()

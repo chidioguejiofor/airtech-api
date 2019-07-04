@@ -14,7 +14,7 @@ BASE_BOOKING_URL = '/api/v1/flights/{}/bookings'
 
 
 @pytest.mark.django_db
-class TestFlightRoute:
+class TestBookFlightRoute:
 
     # POST
     def test_book_flight_succeeds(self, client, valid_user_one_token,
@@ -64,7 +64,6 @@ class TestFlightRoute:
         exp_time = parse(response_data['expiryDate'])
         schedule = saved_flight_with_days_to_flight_gt_60.schedule
         time_diff = schedule - exp_time
-
         assert response.status_code == 201
         assert response_body['status'] == 'success'
         assert response_body['message'] == success_messages['booking_success']
