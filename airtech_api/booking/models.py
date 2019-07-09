@@ -15,7 +15,7 @@ class Booking(BaseModel):
     flight_model = models.ForeignKey(
         Flight,
         on_delete=models.CASCADE,
-        related_name='flight',
+        related_name='bookings',
         null=False,
         db_column='flight_id',
     )
@@ -25,7 +25,7 @@ class Booking(BaseModel):
     created_by = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='booked_by',
+        related_name='bookings',
         null=False,
         db_column='created_by',
     )

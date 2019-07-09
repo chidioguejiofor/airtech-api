@@ -7,7 +7,6 @@ from django.http import QueryDict
 import json
 from django.core.validators import URLValidator
 from ..utils.helpers.json_helpers import (generate_response, raise_error,
-                                          retrieve_model_with_id,
                                           parse_paginator_request_query,
                                           generate_pagination_meta)
 
@@ -27,12 +26,7 @@ class BookingView(APIView):
 
     def post(self, request, **kwargs):
         flight_id = kwargs.get('flight_id', '')
-        flight = retrieve_model_with_id(
-            Flight,
-            flight_id,
-            serialization_errors['resource_id_not_found'].format(
-                'Flight', flight_id),
-        )
+        flight = Flight.get_model_or_404(flight_id)
         request_body = {
             'ticket_price': flight.current_price,
             'flight_model': flight.id,
@@ -53,6 +47,27 @@ class BookingView(APIView):
                         status_code=HTTP_409_CONFLICT)
 
         raise_error(serializer.errors['flight_model'][0])
+
+
+class SingleUserBookings(APIView):
+    permission_classes = [TokenValidator]
+    protected_methods = ['DELETE', 'GET']
+
+    def delete(self, request, **kwargs):
+        id = kwargs.get('id', '')
+        extra_filter = {'created_by': request.decoded_user}
+        booking = Booking.get_model_or_404(id, extra_filters=extra_filter)
+        if booking.paid_at:
+            raise_error(
+                serialization_errors['paid_booking_cannot_be_deleted'], )
+        if booking.has_expired():
+            raise_error(
+                serialization_errors['cannot_delete_expired_booking'], )
+        booking_id = str(booking.id)
+        booking.delete()
+
+        return generate_response(
+            success_messages['deleted'].format('Booking', booking_id), )
 
 
 class UserBookings(APIView):
@@ -113,7 +128,7 @@ class UserPayment(APIView):
                 bookingId=metadata['bookingId'],
                 message=payment_data['gateway_response'])
         else:
-            booking = retrieve_model_with_id(Booking, metadata['bookingId'])
+            booking = Booking.get_model_or_404(metadata['bookingId'])
             booking.paid_at = payment_data['paid_at']
             booking.save()
             redirect_url = self.generate_redirect_url(
@@ -137,14 +152,7 @@ class UserPayment(APIView):
         user = request.decoded_user
 
         filter_args = dict(created_by=user.id)
-
-        booking = retrieve_model_with_id(
-            Booking,
-            id,
-            serialization_errors['resource_id_not_found'].format(
-                'Booking', id),
-            extra_filters=filter_args,
-        )
+        booking = Booking.get_model_or_404(id, filter_args)
 
         if booking.paid_at:
             raise_error(serialization_errors['booking_already_paid'])

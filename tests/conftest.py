@@ -3,7 +3,7 @@ from airtech_api.users.models import User
 from airtech_api.flight.models import Flight
 from airtech_api.booking.models import Booking
 from airtech_api.utils.helpers.json_helpers import add_token_to_response, generate_token
-from tests.mocks.users import valid_admin_user, valid_user_one
+from tests.mocks.users import valid_admin_user, valid_user_one, valid_user_two
 from tests.mocks.flight import (
     valid_flight_one,
     generate_flight_with_timedelta_args,
@@ -25,6 +25,14 @@ def saved_valid_user_one(transactional_db):
 
 
 @pytest.fixture(scope='function')
+def saved_valid_user_two(transactional_db):
+
+    user = User(**valid_user_two)
+    user.save()
+    return user
+
+
+@pytest.fixture(scope='function')
 def saved_valid_admin_user_model_one(transactional_db):
 
     user = User(**valid_admin_user)
@@ -34,6 +42,16 @@ def saved_valid_admin_user_model_one(transactional_db):
 
 @pytest.fixture(scope='function')
 def saved_valid_flight_model_one(transactional_db,
+                                 saved_valid_admin_user_model_one):
+
+    flight = Flight(**valid_flight_one,
+                    created_by=saved_valid_admin_user_model_one)
+    flight.save()
+    return flight
+
+
+@pytest.fixture(scope='function')
+def saved_valid_flight_model_two(transactional_db,
                                  saved_valid_admin_user_model_one):
 
     flight = Flight(**valid_flight_one,
@@ -62,6 +80,20 @@ def saved_bulk_inserted_flights(transactional_db,
 
     saved_flights = Flight.objects.bulk_create(flights)
     return saved_flights
+
+
+@pytest.fixture(scope='function')
+def saved_valid_booking(transactional_db, saved_valid_user_one,
+                        saved_flight_with_days_to_flight_gt_60):
+    booking = Booking(
+        **generate_booking_model_data_with_timedelta(
+            saved_valid_user_one,
+            paid=False,
+            flight_model=saved_flight_with_days_to_flight_gt_60),
+        expiry_date=timezone.now() + timedelta(days=10),
+    )
+    booking.save()
+    return booking
 
 
 @pytest.fixture(scope='function')
@@ -165,6 +197,15 @@ def valid_user_one_token(saved_valid_user_one):
         'username': saved_valid_user_one.username,
         'id': str(saved_valid_user_one.id),
         'email': saved_valid_user_one.email,
+    })['token']
+
+
+@pytest.fixture(scope='function')
+def valid_user_two_token(saved_valid_user_two):
+    return add_token_to_response({
+        'username': saved_valid_user_two.username,
+        'id': str(saved_valid_user_two.id),
+        'email': saved_valid_user_two.email,
     })['token']
 
 

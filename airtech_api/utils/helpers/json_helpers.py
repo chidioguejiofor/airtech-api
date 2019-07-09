@@ -6,8 +6,6 @@ from rest_framework.response import Response
 from rest_framework import serializers
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 from datetime import datetime, timedelta
-from django.core.validators import URLValidator
-from django.core.exceptions import ValidationError
 
 
 def generate_response(message,
@@ -113,16 +111,3 @@ def parse_paginator_request_query(query_params, queryset):
     page = total_pages if page > total_pages else page
 
     return paginator, page
-
-
-def retrieve_model_with_id(model, model_id, *err_args, **kwargs):
-    extra_filters = kwargs.pop('extra_filters_', {})
-    try:
-        model_instance = model.objects.filter(id=model_id,
-                                              **extra_filters).first()
-        if not model_instance:
-            raise ValidationError('')
-    except ValidationError:
-        raise_error(*err_args, HTTP_404_NOT_FOUND, **kwargs)
-
-    return model_instance

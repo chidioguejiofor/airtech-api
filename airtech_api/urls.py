@@ -3,7 +3,7 @@ from django.conf.urls import url
 from .index import views as root_index
 from .users.views import SignupView, LoginView, ConfirmView, resend_email, UserProfilePicture
 from .flight.views import FlightView, SingleFlightView
-from .booking.views import BookingView, UserBookings, UserPayment
+from .booking.views import BookingView, UserBookings, UserPayment, SingleUserBookings
 
 urlpatterns = [
     path(r'api/v1/auth/register', SignupView.as_view()),
@@ -14,6 +14,7 @@ urlpatterns = [
     path('api/v1/flights/<str:id>', SingleFlightView.as_view()),
     path('api/v1/flights/<str:flight_id>/bookings', BookingView.as_view()),
     path('api/v1/user/bookings', UserBookings.as_view()),
+    path('api/v1/user/bookings/<str:id>', SingleUserBookings.as_view()),
     path('api/v1/user/bookings/<str:id>/payment', UserPayment.as_view()),
     path('api/v1/user/profile/picture', UserProfilePicture.as_view()),
     url(r'api', root_index.welcome_message),

@@ -4,6 +4,8 @@ from django.db import models
 
 # Create your models here.
 class Flight(AuditableBaseModel):
+    class Meta:
+        db_table = 'Flight'
 
     capacity = models.IntegerField(null=False)
     location = models.TextField(null=False)
@@ -15,6 +17,3 @@ class Flight(AuditableBaseModel):
         choices=(('local', 'local'), ('international', 'international')),
         max_length=13,
     )
-
-    class Meta:
-        db_table = 'Flight'

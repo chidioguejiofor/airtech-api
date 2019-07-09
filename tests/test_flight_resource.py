@@ -1,5 +1,5 @@
 import pytest
-
+from airtech_api.booking.models import Booking
 from airtech_api.utils import success_messages
 from airtech_api.utils.error_messages import serialization_errors
 from airtech_api.flight.models import Flight
@@ -266,3 +266,230 @@ class TestFlightRoute:
             HTTP_AUTHORIZATION='Bearer {}'.format('invalid-token'),
         )
         assert_token_is_invalid(response)
+
+    # UPDATE ROUTE
+    def test_update_flight_with_correct_data_succeeds(
+            self, client, valid_admin_user_token,
+            saved_valid_flight_model_two):
+        update_data = {
+            'capacity': 100000,
+            'type': 'international',
+            'currentPrice': 500_000
+        }
+        old_updated_at = saved_valid_flight_model_two.updated_at
+
+        response = client.patch(
+            SINGLE_FLIGHT_URL.format(saved_valid_flight_model_two.id),
+            content_type='application/json',
+            data=update_data,
+            HTTP_AUTHORIZATION='Bearer {}'.format(valid_admin_user_token),
+        )
+
+        assert response.status_code == 201
+        res_body = response.data['data']
+
+        assert res_body['capacity'] == update_data['capacity']
+        assert res_body['type'] == update_data['type']
+        assert res_body['currentPrice'] == update_data['currentPrice']
+        assert old_updated_at != res_body['updatedAt']
+
+    def test_update_flight_with_invalid_values_fails(
+            self, client, valid_admin_user_token,
+            saved_valid_flight_model_two):
+        update_data = {
+            'capacity': 'not a number',
+            'type': 'abracada',
+            'currentPrice': 'certainly invalid',
+        }
+
+        response = client.patch(
+            SINGLE_FLIGHT_URL.format(saved_valid_flight_model_two.id),
+            content_type='application/json',
+            data=update_data,
+            HTTP_AUTHORIZATION='Bearer {}'.format(valid_admin_user_token),
+        )
+
+        res_body = response.data
+        flight = Flight.objects.get(pk=saved_valid_flight_model_two.id)
+
+        assert response.status_code == 400
+
+        assert res_body['status'] == 'error'
+        assert res_body['message'] == serialization_errors[
+            'many_invalid_fields']
+        assert res_body['errors']['type'][0] == serialization_errors[
+            'invalid_flight_type']
+        assert res_body['errors']['capacity'][
+            0] == 'A valid integer is required.'
+        assert res_body['errors']['currentPrice'][
+            0] == 'A valid integer is required.'
+
+        assert str(flight.capacity) != update_data['capacity']
+        assert str(flight.current_price) != update_data['currentPrice']
+        assert flight.type != update_data['type']
+
+    def test_update_flight_no_request_body_fails(self, client,
+                                                 valid_admin_user_token,
+                                                 saved_valid_flight_model_two):
+
+        response = client.patch(
+            SINGLE_FLIGHT_URL.format(saved_valid_flight_model_two.id),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer {}'.format(valid_admin_user_token),
+        )
+
+        res_body = response.data
+
+        assert response.status_code == 400
+        assert res_body['status'] == 'error'
+        assert res_body['message'] == serialization_errors[
+            'empty_request'].format('Flight')
+
+    def test_attempt_to_update_location_when_bookings_have_been_made_fails(
+            self, client, valid_admin_user_token, saved_valid_flight_model_two,
+            saved_valid_user_one):
+        update_data = {
+            'location': 'Abuja, Lagos',
+        }
+        Booking.objects.create(
+            flight_model=saved_valid_flight_model_two,
+            ticket_price=saved_valid_flight_model_two.current_price,
+            created_by=saved_valid_user_one,
+        )
+        response = client.patch(
+            SINGLE_FLIGHT_URL.format(saved_valid_flight_model_two.id),
+            content_type='application/json',
+            data=update_data,
+            HTTP_AUTHORIZATION='Bearer {}'.format(valid_admin_user_token),
+        )
+
+        res_body = response.data
+        flight = Flight.objects.get(pk=saved_valid_flight_model_two.id)
+
+        assert response.status_code == 400
+
+        assert res_body['status'] == 'error'
+        assert res_body['message'] == serialization_errors[
+            'many_invalid_fields']
+        assert res_body['errors']['location'][0] == \
+               serialization_errors['cannot_update_flight_field_with_bookings'].format('location')
+
+        assert str(flight.location) != update_data['location']
+
+    def test_attempt_to_update_destination_when_bookings_have_been_made_fails(
+            self, client, valid_admin_user_token, saved_valid_flight_model_two,
+            saved_valid_user_one):
+        update_data = {
+            'destination': 'Aba Kingdom',
+        }
+        Booking.objects.create(
+            flight_model=saved_valid_flight_model_two,
+            ticket_price=saved_valid_flight_model_two.current_price,
+            created_by=saved_valid_user_one,
+        )
+        response = client.patch(
+            SINGLE_FLIGHT_URL.format(saved_valid_flight_model_two.id),
+            content_type='application/json',
+            data=update_data,
+            HTTP_AUTHORIZATION='Bearer {}'.format(valid_admin_user_token),
+        )
+
+        res_body = response.data
+        flight = Flight.objects.get(pk=saved_valid_flight_model_two.id)
+
+        assert response.status_code == 400
+
+        assert res_body['status'] == 'error'
+        assert res_body['message'] == serialization_errors[
+            'many_invalid_fields']
+        assert res_body['errors']['destination'][0] == \
+               serialization_errors['cannot_update_flight_field_with_bookings'].format('destination')
+
+        assert str(flight.destination) != update_data['destination']
+
+    def test_attempt_to_update_schedule_fails(self, client,
+                                              valid_admin_user_token,
+                                              saved_valid_flight_model_two,
+                                              saved_valid_user_one):
+        update_data = {
+            'schedule': str(datetime.now()),
+        }
+        response = client.patch(
+            SINGLE_FLIGHT_URL.format(saved_valid_flight_model_two.id),
+            content_type='application/json',
+            data=update_data,
+            HTTP_AUTHORIZATION='Bearer {}'.format(valid_admin_user_token),
+        )
+
+        res_body = response.data
+        flight = Flight.objects.get(pk=saved_valid_flight_model_two.id)
+
+        assert response.status_code == 400
+
+        assert res_body['status'] == 'error'
+        assert res_body['message'] == serialization_errors[
+            'many_invalid_fields']
+        assert res_body['errors']['schedule'][0] == \
+               serialization_errors['cannot_update_field'].format('Flight', 'schedule')
+
+        assert str(flight.schedule) != update_data['schedule']
+
+    #  DELETE
+    def test_delete_flight_with_no_booking_succeeds(
+            self, client, saved_valid_admin_user_model_one,
+            saved_valid_flight_model_two, valid_admin_user_token):
+        response = client.delete(
+            SINGLE_FLIGHT_URL.format(saved_valid_flight_model_two.id),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer {}'.format(valid_admin_user_token),
+        )
+        body = response.data
+        assert response.status_code == 200
+        assert body['status'] == 'success'
+        assert body['message'] == success_messages['deleted'].format(
+            'Flight', saved_valid_flight_model_two.id)
+        assert len(
+            Flight.objects.filter(id=saved_valid_flight_model_two.id)) == 0
+
+    def test_delete_flight_with_booking_fails(self, client,
+                                              saved_valid_user_one,
+                                              saved_valid_flight_model_two,
+                                              valid_admin_user_token):
+        Booking.objects.create(
+            flight_model=saved_valid_flight_model_two,
+            ticket_price=saved_valid_flight_model_two.current_price,
+            created_by=saved_valid_user_one,
+        )
+        response = client.delete(
+            SINGLE_FLIGHT_URL.format(saved_valid_flight_model_two.id),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer {}'.format(valid_admin_user_token),
+        )
+
+        res_body = response.data
+
+        assert response.status_code == 400
+        assert res_body['status'] == 'error'
+        assert res_body['message'] == serialization_errors[
+            'cannot_delete_flight_with_bookings']
+        assert Flight.objects.get(pk=saved_valid_flight_model_two.id)
+
+    def test_delete_flight_with_expired_schedule_fails(
+            self, client, saved_valid_user_one, saved_valid_flight_model_two,
+            valid_admin_user_token):
+        saved_valid_flight_model_two.schedule = datetime.now() - timedelta(
+            minutes=1)
+        saved_valid_flight_model_two.save()
+        response = client.delete(
+            SINGLE_FLIGHT_URL.format(saved_valid_flight_model_two.id),
+            content_type='application/json',
+            HTTP_AUTHORIZATION='Bearer {}'.format(valid_admin_user_token),
+        )
+
+        res_body = response.data
+
+        assert response.status_code == 400
+        assert res_body['status'] == 'error'
+        assert res_body['message'] == serialization_errors[
+            'cannot_delete_flight_that_has_flown']
+        assert Flight.objects.get(pk=saved_valid_flight_model_two.id)
