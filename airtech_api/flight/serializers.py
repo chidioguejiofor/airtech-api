@@ -2,11 +2,21 @@ from rest_framework import serializers
 from .models import Flight
 from ..utils.helpers.json_helpers import raise_error
 from ..utils.error_messages import serialization_errors
+from ..utils.helpers.serializer_helpers import UpdateableSerializer
 from django.utils import timezone
 from datetime import timedelta
 
 
-class FlightSerializer(serializers.ModelSerializer):
+class FlightSerializer(UpdateableSerializer):
+    updateable_fields = [
+        'capacity',
+        'type',
+        ('currentPrice', 'current_price'),
+        'location',
+        'destination',
+    ]
+    uneditable_fields = ['schedule']
+
     capacity = serializers.IntegerField(min_value=1)
     type = serializers.CharField()
     currentPrice = serializers.IntegerField(source='current_price')
@@ -23,6 +33,47 @@ class FlightSerializer(serializers.ModelSerializer):
                 'write_only': True
             },
         }
+
+    @classmethod
+    def update_data_from_requests(cls,
+                                  user_request,
+                                  model,
+                                  fields_to_update=None):
+        """Ensured that the user cannot update location and destination if flight is booked
+
+        Args:
+            user_request(dict): this contains the user request
+            model(Flight): the flight model
+        Raises ValidationError:
+            when the the flight has bookings and the user is trying to update
+            either location or destination
+
+        """
+
+        err_dict = cls._generate_for_errors_object_when_updating(user_request)
+        if len(err_dict) > 0:
+            raise_error(serialization_errors['many_invalid_fields'],
+                        err_dict=err_dict)
+        return super().update_data_from_requests(user_request, model,
+                                                 fields_to_update)
+
+    @staticmethod
+    def _generate_for_errors_object_when_updating(user_request):
+        """Generates error object when updating
+
+        Args:
+            user_request: The user request object
+
+        Returns:
+            (dict): error dictionary which can be empty or with errors
+        """
+        err_dict = {}
+        for field in ['location', 'destination']:
+            if field in user_request:
+                err_dict[field] = \
+                    [serialization_errors['cannot_update_flight_field_with_bookings'].format(field)]
+
+        return err_dict
 
     def validate_type(self, validated_data):
         """Validates the flight type

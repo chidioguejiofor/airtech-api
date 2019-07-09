@@ -48,7 +48,7 @@ def assert_resource_not_found(response, resource_name, bad_id):
     assert response_body['status'] == 'error'
     assert response_body['message'] == \
            serialization_errors['resource_id_not_found'].format(
-               resource_name, bad_id
+               resource_name
            )
 
 

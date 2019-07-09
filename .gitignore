@@ -11,3 +11,4 @@ airtech-redis
 celerybeat.pid
 celerybeat-schedule
 .coveragerc
+.coverage

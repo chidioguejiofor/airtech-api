@@ -1,9 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.status import HTTP_201_CREATED, HTTP_404_NOT_FOUND
+from django.utils import timezone
 from ..utils.helpers.json_helpers import (generate_response, raise_error,
                                           generate_pagination_meta,
-                                          parse_paginator_request_query,
-                                          retrieve_model_with_id)
+                                          parse_paginator_request_query)
 from .serializers import FlightSerializer
 from ..utils.error_messages import serialization_errors
 from ..utils.validators.token_validator import AdminTokenValidator, TokenValidator
@@ -18,17 +18,7 @@ class FlightView(APIView):
     regular_user_methods = ['GET']
 
     @staticmethod
-    def post(request, format='json'):
-        """Creates a new flight
-
-        Args:
-            request: An object that contains the request made by the user
-            format(str): Specifies that JSON is sent to the app
-
-        Returns:
-            None
-
-        """
+    def post(request):
         user = request.decoded_user
         request_data = dict(**request.data, created_by=user.id)
         serializer = FlightSerializer(data=request_data)
@@ -44,7 +34,7 @@ class FlightView(APIView):
                     err_dict=serializer.errors)
 
     @staticmethod
-    def get(request, format='json'):
+    def get(request):
         queryset = Flight.objects.order_by('-schedule')
         paginator, page = parse_paginator_request_query(
             request.query_params, queryset)
@@ -61,19 +51,41 @@ class FlightView(APIView):
 
 class SingleFlightView(APIView):
 
-    permission_classes = [TokenValidator]
-    protected_methods = ['GET']
+    permission_classes = [AdminTokenValidator]
+    protected_methods = ['GET', 'DELETE', 'PATCH']
+    regular_user_methods = ['GET']
 
     @staticmethod
     def get(request, *args, **kwargs):
         flight_id = kwargs.get('id')
-        flight = retrieve_model_with_id(
-            Flight, flight_id,
-            serialization_errors['resource_id_not_found'].format(
-                'Flight', flight_id))
+        flight = Flight.get_model_or_404(flight_id)
         json_flight = FlightSerializer(flight).data
 
         return generate_response(
             success_messages['retrieved'].format('Flight'),
             json_flight,
         )
+
+    @staticmethod
+    def delete(request, **kwargs):
+        id = kwargs.get('id', '')
+        flight = Flight.get_model_or_404(id)
+        number_of_bookings = flight.bookings.count()
+        if timezone.now() >= flight.schedule:
+            raise_error(
+                serialization_errors['cannot_delete_flight_that_has_flown'], )
+        if number_of_bookings > 0:
+            raise_error(
+                serialization_errors['cannot_delete_flight_with_bookings'], )
+
+        flight_id = flight.id
+        flight.delete()
+        return generate_response(
+            success_messages['deleted'].format('Flight', flight_id), )
+
+    @staticmethod
+    def patch(request, *args, **kwargs):
+        flight_id = kwargs.get('id')
+        flight = Flight.get_model_or_404(flight_id)
+        user_request = request.data
+        return FlightSerializer.update_data_from_requests(user_request, flight)

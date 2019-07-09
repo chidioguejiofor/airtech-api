@@ -7,6 +7,10 @@ msg_dict = {
     '{} created successfully',
     'retrieved':
     'Successfully retrieved {}',
+    'update':
+    'Successfully updated {}',
+    'deleted':
+    'Successfully deleted {} with id `{}`',
     'booking_success':
     'You have successfully booked this Flight',
     'confirm_mail':
