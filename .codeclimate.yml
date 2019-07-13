@@ -4,3 +4,5 @@ exclude_patterns:
   - "*/**/wsgi.py"
   - "*/**/migrations/*"
   - "conftest.py"
+  - "locustfile.py"
+
