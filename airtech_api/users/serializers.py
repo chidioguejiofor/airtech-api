@@ -37,11 +37,12 @@ class UserSerializer(serializers.ModelSerializer):
         get_unique_validator(User, 'email'),
     ])
     verified = serializers.BooleanField(read_only=True)
+    admin = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = User
         fields = ('id', 'firstName', 'gender', 'lastName', 'email', 'username',
-                  'password', 'verified', 'imageUrl')
+                  'password', 'verified', 'imageUrl', 'admin')
         extra_kwargs = {'password': {'write_only': True}}
 
     def validate_gender(self, validated_data):
