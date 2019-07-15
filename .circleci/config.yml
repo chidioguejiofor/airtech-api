@@ -110,6 +110,6 @@ workflows:
               - run_test_and_upload_coverage
             filters:
               branches:
-                only:
-                  - staging
+#                only:
+#                  - staging
 
