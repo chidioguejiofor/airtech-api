@@ -1,4 +1,4 @@
-[![Maintainability](https://api.codeclimate.com/v1/badges/5c9be06a382901592e89/maintainability)](https://codeclimate.com/github/chidioguejiofor/airtech-api/maintainability) [![Maintainability](https://api.codeclimate.com/v1/badges/5c9be06a382901592e89/maintainability)](https://codeclimate.com/github/chidioguejiofor/airtech-api/maintainability)
+[![CircleCI](https://circleci.com/gh/chidioguejiofor/airtech-api.svg?style=svg)](https://circleci.com/gh/chidioguejiofor/airtech-api) [![Test Coverage](https://api.codeclimate.com/v1/badges/5c9be06a382901592e89/test_coverage)](https://codeclimate.com/github/chidioguejiofor/airtech-api/test_coverage) [![Maintainability](https://api.codeclimate.com/v1/badges/5c9be06a382901592e89/maintainability)](https://codeclimate.com/github/chidioguejiofor/airtech-api/maintainability)
 
 # Airtech API
 has had their challenges using spreadsheets to manage their flight booking system. They are ready to automate their processes with an application and have reached out to you to build a flight booking application for the company.
@@ -23,7 +23,7 @@ Linting follows the [PE8 Style Guide](https://www.python.org/dev/peps/pep-0008/)
 In order to start the app locally, run `python manage.py runserver`. 
 
 ## Documentation
-You can all the endpoints in the postman documentation  here [![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/2ed3253e6a165822c4c6)
+You can all the endpoints in the postman documentation  here [![Open Docs](https://run.pstmn.io/button.svg)](https://documenter.getpostman.com/view/4208573/SVSHrppk)
 
 ## Starting Redis and Celery
 Celery is used as the message broker for the API. We use it to run heavy task(via celery-workers) and run cronjobs(via celery-beat).

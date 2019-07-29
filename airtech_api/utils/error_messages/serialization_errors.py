@@ -41,6 +41,8 @@ msg_dict = {
     'Your booking has expired, thus you cannot pay for this ticket',
     'invalid_url':
     'The `{}` field must be a valid URL with protocols `http` or `https`',
+    "invalid_url_field":
+    'This field must be a valid URL with protocols `http` or `https`',
     'paystack_threw_error':
     "There was an unexpected error while processing request. "
     "Please raise this as an issue in at "
@@ -58,5 +60,9 @@ msg_dict = {
     'cannot_update_flight_field_with_bookings':
     'You cannot update the `{}` of this flight because it has already been booked',
     'cannot_update_field':
-    'You cannot update a {} {}'
+    'You cannot update a {} {}',
+    'regular_user_only':
+    'This endpoint is for only regular users',
+    'profile_not_updated':
+    'You need to update your profile picture before you can do this',
 }

@@ -57,3 +57,17 @@ def assert_send_mail_data(message_obj, **kwargs):
     assert message_obj.subject._subject == kwargs.get('subject')
     assert message_obj.from_email.email == 'no-reply@airtech-api.com'
     assert receiever_email == kwargs.get('receiver')
+
+
+def assert_redirect_response(response,
+                             success_param,
+                             client_callback=None,
+                             status_code=302):
+    query_params = {
+        query.split('=')[0]: query.split('=')[1]
+        for query in response.url.split('?')[1].split('&')
+    }
+    if client_callback:
+        assert response.url.startswith(client_callback)
+    assert response.status_code == status_code
+    assert query_params['success'] == success_param

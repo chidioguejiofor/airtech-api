@@ -23,7 +23,6 @@ def send_mail_as_html(subject, receivers, html):
                    to_emails=receivers,
                    subject=subject,
                    html_content=html)
-
     try:
         sg = SendGridAPIClient(os.getenv('SENDGRID_API_KEY'))
         sg.send(message)

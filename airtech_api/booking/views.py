@@ -26,7 +26,7 @@ class BookingView(APIView):
 
     def post(self, request, **kwargs):
         flight_id = kwargs.get('flight_id', '')
-        flight = Flight.get_model_or_404(flight_id)
+        flight = Flight.get_model_by_id_or_404(flight_id)
         request_body = {
             'ticket_price': flight.current_price,
             'flight_model': flight.id,
@@ -56,7 +56,8 @@ class SingleUserBookings(APIView):
     def delete(self, request, **kwargs):
         id = kwargs.get('id', '')
         extra_filter = {'created_by': request.decoded_user}
-        booking = Booking.get_model_or_404(id, extra_filters=extra_filter)
+        booking = Booking.get_model_by_id_or_404(id,
+                                                 extra_filters=extra_filter)
         if booking.paid_at:
             raise_error(
                 serialization_errors['paid_booking_cannot_be_deleted'], )
@@ -128,7 +129,7 @@ class UserPayment(APIView):
                 bookingId=metadata['bookingId'],
                 message=payment_data['gateway_response'])
         else:
-            booking = Booking.get_model_or_404(metadata['bookingId'])
+            booking = Booking.get_model_by_id_or_404(metadata['bookingId'])
             booking.paid_at = payment_data['paid_at']
             booking.save()
             redirect_url = self.generate_redirect_url(
@@ -152,7 +153,7 @@ class UserPayment(APIView):
         user = request.decoded_user
 
         filter_args = dict(created_by=user.id)
-        booking = Booking.get_model_or_404(id, filter_args)
+        booking = Booking.get_model_by_id_or_404(id, filter_args)
 
         if booking.paid_at:
             raise_error(serialization_errors['booking_already_paid'])

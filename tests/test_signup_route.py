@@ -71,7 +71,8 @@ class TestSignupRoute:
             "lastName": "fdajhfio",
             "email": "chid@email.com",
             "gender": "invalid",
-            "password": "password"
+            "password": "password",
+            "callbackURL": "http://test.com"
         }
 
         response = client.post(SIGNUP_ENDPOINT,
@@ -80,6 +81,33 @@ class TestSignupRoute:
         response_body = response.data
         errors = response_body['errors']
         assert errors['gender'][0] == serialization_errors['invalid_gender']
+        assert response.status_code == 400
+        assert response_body['status'] == 'error'
+
+    def test_signup_with_missing_callback_url_fails(self, client):
+        """Should fail when the gender is invalid
+
+        Returns:
+            None
+        """
+
+        missing_callback_url = {
+            "username": "age1201",
+            "firstName": "MMM",
+            "lastName": "fdajhfio",
+            "email": "chid@email.com",
+            "gender": "male",
+            "password": "password"
+        }
+
+        response = client.post(SIGNUP_ENDPOINT,
+                               data=missing_callback_url,
+                               content_type="application/json")
+        response_body = response.data
+        errors = response_body['errors']
+
+        assert errors['callbackURL'][0] == serialization_errors[
+            'invalid_url_field']
         assert response.status_code == 400
         assert response_body['status'] == 'error'
 
