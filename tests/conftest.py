@@ -11,7 +11,7 @@ from tests.mocks.flight import (
 from django.utils import timezone
 from tests.mocks.booking import (generate_booking_model_data_with_timedelta)
 from datetime import datetime, timedelta
-from airtech_api.utils.constants import CONFIRM_EMAIL_TYPE, TEST_HOST_NAME
+from airtech_api.utils.constants import CONFIRM_EMAIL_TYPE, TEST_HOST_NAME, ADMIN_REQUEST_EMAIL_TYPE
 from tempfile import TemporaryFile
 import os
 
@@ -214,6 +214,17 @@ def valid_user_one_confirm_account_token(saved_valid_user_one):
     token_data = {
         'email': saved_valid_user_one.email,
         'type': CONFIRM_EMAIL_TYPE,
+        'redirect_url': 'http://{}/login'.format(TEST_HOST_NAME),
+        'exp': datetime.utcnow() + timedelta(minutes=5)
+    }
+    return generate_token(token_data)
+
+
+@pytest.fixture(scope='function')
+def valid_admin_request_token(saved_valid_user_one):
+    token_data = {
+        'email': saved_valid_user_one.email,
+        'type': ADMIN_REQUEST_EMAIL_TYPE,
         'redirect_url': 'http://{}/login'.format(TEST_HOST_NAME),
         'exp': datetime.utcnow() + timedelta(minutes=5)
     }

@@ -58,7 +58,7 @@ class SingleFlightView(APIView):
     @staticmethod
     def get(request, *args, **kwargs):
         flight_id = kwargs.get('id')
-        flight = Flight.get_model_or_404(flight_id)
+        flight = Flight.get_model_by_id_or_404(flight_id)
         json_flight = FlightSerializer(flight).data
 
         return generate_response(
@@ -69,7 +69,7 @@ class SingleFlightView(APIView):
     @staticmethod
     def delete(request, **kwargs):
         id = kwargs.get('id', '')
-        flight = Flight.get_model_or_404(id)
+        flight = Flight.get_model_by_id_or_404(id)
         number_of_bookings = flight.bookings.count()
         if timezone.now() >= flight.schedule:
             raise_error(
@@ -86,6 +86,6 @@ class SingleFlightView(APIView):
     @staticmethod
     def patch(request, *args, **kwargs):
         flight_id = kwargs.get('id')
-        flight = Flight.get_model_or_404(flight_id)
+        flight = Flight.get_model_by_id_or_404(flight_id)
         user_request = request.data
         return FlightSerializer.update_data_from_requests(user_request, flight)

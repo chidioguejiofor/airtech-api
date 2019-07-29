@@ -2,16 +2,16 @@
 
 from rest_framework.views import APIView
 from .serializers import UserSerializer, LoginSerializer
-from ..utils.helpers.json_helpers import generate_response, raise_error, add_token_to_response
+from ..utils.helpers.json_helpers import generate_response, raise_error, add_token_to_response, validate_url, validate_confirmation_request
 from ..utils import success_messages
 from ..utils.error_messages import serialization_errors, tokenization_errors
 from rest_framework.status import HTTP_404_NOT_FOUND, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_202_ACCEPTED
-from ..utils.validators.token_validator import TokenValidator
-from ..utils.constants import CONFIRM_EMAIL_TYPE
+from ..utils.validators.token_validator import TokenValidator, VerifiedUserTokenValidator
+from ..utils.constants import CONFIRM_EMAIL_TYPE, ADMIN_REQUEST_EMAIL_TYPE, ADMIN_REQUEST_SUBJECT, CONFRIM_EMAIL_SUBJECT
 from django.http import HttpResponseRedirect
 from rest_framework.decorators import api_view
-from rest_framework.parsers import MultiPartParser, JSONParser, FormParser, FileUploadParser
-from ..utils.helpers.email_helpers import send_confirm_mail
+from rest_framework.parsers import MultiPartParser, JSONParser
+from ..utils.helpers.email_helpers import send_email_with_token
 
 from airtech_api.services.cloudinary import upload_profile_picture
 
@@ -34,41 +34,86 @@ class SignupView(APIView):
             A Response object containing the JSON response
         """
         request_data = dict(**request.data)
+        callback_url = request_data.get('callbackURL', '')
+
+        err_dict = {}
+        if not validate_url(callback_url):
+            err_dict = {
+                'callbackURL': [serialization_errors['invalid_url_field']]
+            }
+
         serializer = UserSerializer(data=request_data)
-        if serializer.is_valid():
+        if serializer.is_valid() and not err_dict:
             _ = serializer.save()
 
             serialization_data = serializer.data
             user_email = serialization_data['email']
-            server_host = request.get_host()
-            client_host = request.headers.get('Host')
-            send_confirm_mail(user_email, server_host, client_host)
+            server_host = os.getenv('HOSTNAME')
+            send_email_with_token(
+                user_email,
+                'confirm-email.html',
+                subject=CONFRIM_EMAIL_SUBJECT,
+                redirect_url=callback_url,
+                confirm_link=f'{server_host}/api/v1/auth/confirm-email',
+                mail_type=CONFIRM_EMAIL_TYPE,
+            )
             return generate_response(
                 success_messages['confirm_mail'].format(user_email),
                 status_code=HTTP_201_CREATED)
+        err_dict.update(serializer.errors)
         raise_error(serialization_errors['many_invalid_fields'],
-                    err_dict=serializer.errors)
+                    err_dict=err_dict)
 
 
 class ConfirmView(APIView):
     @staticmethod
     def get(request, **kwargs):
         token = kwargs.get('token', '')
-        decoded = TokenValidator.decode_token(token)
-        type_is_not_valid = decoded.get('type') != CONFIRM_EMAIL_TYPE
-        email_is_not_valid = 'email' not in decoded
-        if type_is_not_valid or email_is_not_valid:
-            raise_error(tokenization_errors['token_is_invalid'],
-                        HTTP_401_UNAUTHORIZED)
+        user, redirect_url = validate_confirmation_request(
+            token, CONFIRM_EMAIL_TYPE, success_key='verified')
+        if user:
+            user.verified = True
+            user.save()
+        return HttpResponseRedirect(redirect_to=redirect_url)
 
-        user = User.objects.filter(email=decoded['email']).first()
-        if not user:
-            raise_error(tokenization_errors['token_is_invalid'],
-                        HTTP_401_UNAUTHORIZED)
 
-        user.verified = True
-        user.save()
-        return HttpResponseRedirect(redirect_to=decoded.get('redirect_url'))
+class RequestAdminAccessView(APIView):
+    permission_classes = [VerifiedUserTokenValidator]
+    protected_methods = ['POST']
+
+    @staticmethod
+    def post(request):
+        user = request.decoded_user
+        callback_url = request.data.get('callbackURL', '')
+        if not validate_url(callback_url):
+            raise_error(serialization_errors['many_invalid_fields'],
+                        err_dict={
+                            'callbackURL':
+                            [serialization_errors['invalid_url_field']]
+                        })
+
+        if user.admin:
+            raise_error(serialization_errors['regular_user_only'],
+                        status_code=403)
+        if not user.image_url:
+            raise_error(serialization_errors['profile_not_updated'],
+                        status_code=403)
+
+        server_host = os.getenv('HOSTNAME')
+
+        send_email_with_token(
+            os.getenv('OWNER_EMAIL'),
+            'admin-request-email.html',
+            subject=ADMIN_REQUEST_SUBJECT,
+            redirect_url=callback_url,
+            confirm_link=f'{server_host}/api/v1/auth/request-admin-access',
+            mail_type=ADMIN_REQUEST_EMAIL_TYPE,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            user_email=user.email,
+            profile_picture=user.image_url,
+        )
+        return generate_response(success_messages['admin_request_sent'])
 
 
 class LoginView(APIView):
@@ -102,22 +147,51 @@ class LoginView(APIView):
                     err_dict=serializer.errors)
 
 
-@api_view(['POST'])
-def resend_email(request):
+@api_view(['GET'])
+def accept_admin_request(request, **kwargs):
+    token = kwargs.get('token', '')
+    user, redirect_url = validate_confirmation_request(
+        token, ADMIN_REQUEST_EMAIL_TYPE, success_key='admin_approval')
 
-    email = request.data.get('email')
-    user = User.objects.filter(email=email).first()
-    server_host = request.get_host()
-    client_host = request.headers.get('Host')
+    if user:
+        user.admin = True
+        user.save()
+    return HttpResponseRedirect(redirect_to=redirect_url)
 
-    if not user:
-        raise_error(serialization_errors['email_not_found'].format(email),
-                    status_code=HTTP_404_NOT_FOUND)
-    elif user.verified:
-        raise_error(serialization_errors['user_already_verified'])
 
-    send_confirm_mail(user.email, server_host, client_host)
-    return generate_response(success_messages['confirm_mail'].format(email))
+class ResendEmailEndpoint(APIView):
+    permission_classes = [TokenValidator]
+    protected_methods = ['POST']
+
+    @staticmethod
+    def post(request):
+
+        callback_url = request.data.get('callbackURL', '')
+
+        if not validate_url(callback_url):
+            raise_error(serialization_errors['many_invalid_fields'],
+                        err_dict={
+                            'callbackURL':
+                            serialization_errors['invalid_url_field']
+                        })
+
+        email = request.data.get('email')
+        user = request.decoded_user
+
+        if user.verified:
+            raise_error(serialization_errors['user_already_verified'])
+
+        server_host = os.getenv('HOSTNAME')
+        send_email_with_token(
+            user.email,
+            'confirm-email.html',
+            subject=CONFRIM_EMAIL_SUBJECT,
+            redirect_url=callback_url,
+            confirm_link=f'{server_host}/api/v1/auth/confirm-email',
+            mail_type=CONFIRM_EMAIL_TYPE,
+        )
+        return generate_response(
+            success_messages['confirm_mail'].format(email))
 
 
 class UserProfilePicture(APIView):

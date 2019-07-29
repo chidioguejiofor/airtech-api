@@ -25,9 +25,10 @@ class FlightSerializer(UpdateableSerializer):
 
     class Meta:
         model = Flight
-        fields = ('id', 'capacity', 'location', 'destination', 'schedule',
-                  'currentPrice', 'type', 'created_by', 'createdAt',
-                  'updatedAt')
+        fields = [
+            'id', 'capacity', 'location', 'destination', 'schedule',
+            'currentPrice', 'type', 'created_by', 'createdAt', 'updatedAt'
+        ]
         extra_kwargs = {
             'created_by': {
                 'write_only': True

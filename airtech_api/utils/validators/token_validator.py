@@ -87,6 +87,27 @@ class TokenValidator(BasePermission):
         return user
 
 
+class VerifiedUserTokenValidator(TokenValidator):
+    validation_error_message = tokenization_errors['unverified_account']
+    validation_status_code = HTTP_403_FORBIDDEN
+
+    def is_user_valid(self, user, request, view):
+        """Checks if the user has verified his account
+
+        Note that all subclasses of the TokenValidator must override this method to suit their needs
+
+        Args:
+            user (User): The user model to be tested
+            request (Request): An object containing the user request
+            view (View): The current view
+
+        Returns:
+            True when the user has verified his account or Fals when he has not
+        """
+
+        return user and user.verified is True
+
+
 class AdminTokenValidator(TokenValidator):
     validation_error_message = tokenization_errors['user_is_forbidden']
     validation_status_code = HTTP_403_FORBIDDEN

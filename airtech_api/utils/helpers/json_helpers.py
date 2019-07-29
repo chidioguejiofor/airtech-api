@@ -1,6 +1,13 @@
 import os
 import jwt
 from django.core.paginator import Paginator
+from airtech_api.users.models import User
+
+from ..error_messages import tokenization_errors
+from airtech_api.utils import success_messages
+
+from django.core.validators import URLValidator
+from django.http import HttpResponseRedirect
 from ..constants import DEFAULT_ITEMS_PER_PAGE
 from rest_framework.response import Response
 from rest_framework import serializers
@@ -111,3 +118,50 @@ def parse_paginator_request_query(query_params, queryset):
     page = total_pages if page > total_pages else page
 
     return paginator, page
+
+
+def validate_confirmation_request(token, confirm_type, success_key='verified'):
+    from ..validators.token_validator import TokenValidator
+
+    key = None
+    try:
+        decoded = TokenValidator.decode_token(token)
+    except Exception:
+        decoded = {}
+        key = 'token_is_invalid'
+
+    type_is_not_valid = decoded.get('type') != confirm_type
+    email_is_not_valid = 'email' not in decoded
+    redirect_url = decoded.get('redirect_url', '')
+    user_query = User.objects.filter(email=decoded.get('email', ''))
+    token_is_invalid = type_is_not_valid or email_is_not_valid or len(
+        user_query) == 0
+    if not key and token_is_invalid:
+        key = 'expired_token'
+
+    redirect_url = _get_redirect_url(key, redirect_url, success_key)
+
+    return user_query.first(), redirect_url
+
+
+def _get_redirect_url(key, redirect_url, success_key):
+    if key:
+        redirect_url = '{}?success=false&message={}'.format(
+            redirect_url,
+            tokenization_errors[key],
+        )
+    else:
+        redirect_url = '{}?success=true&message={}'.format(
+            redirect_url,
+            success_messages[success_key],
+        )
+    return redirect_url
+
+
+def validate_url(url):
+    try:
+        validate = URLValidator(schemes=['http', 'https'])
+        validate(url)
+    except Exception:
+        return False
+    return True

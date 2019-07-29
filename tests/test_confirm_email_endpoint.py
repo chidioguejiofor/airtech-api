@@ -2,7 +2,7 @@
 import pytest
 from airtech_api.users.models import User
 
-from tests.helpers.assertion_helpers import assert_token_is_invalid, assert_expired_token
+from tests.helpers.assertion_helpers import assert_redirect_response, assert_expired_token
 from airtech_api.utils.constants import TEST_HOST_NAME
 CONFIRM_EMAIL_ENDPOINT = '/api/v1/auth/confirm-email/{}'
 
@@ -26,7 +26,7 @@ class TestConfirmEmailEndpoint:
         response = client.get(
             CONFIRM_EMAIL_ENDPOINT.format(invalid_confirm_account_token))
         user = User.objects.get(pk=saved_valid_user_one.pk)
-        assert_token_is_invalid(response)
+        assert_redirect_response(response, 'false')
         assert user.verified is False
 
     def test_confirm_with_expired_token_fails(
@@ -43,7 +43,7 @@ class TestConfirmEmailEndpoint:
         response = client.get(
             CONFIRM_EMAIL_ENDPOINT.format(
                 expired_user_one_confirm_account_token))
-        assert_expired_token(response)
+        assert_redirect_response(response, 'false')
         user = User.objects.get(pk=saved_valid_user_one.pk)
         assert user.verified is False
 
@@ -60,8 +60,8 @@ class TestConfirmEmailEndpoint:
         response = client.get(
             CONFIRM_EMAIL_ENDPOINT.format(
                 non_existing_user_confirm_account_token))
-        assert_token_is_invalid(response)
         user = User.objects.get(pk=saved_valid_user_one.pk)
+        assert response.status_code == 302
         assert user.verified is False
 
     def test_confirm_email_succeeds(self, client,
@@ -80,5 +80,5 @@ class TestConfirmEmailEndpoint:
                 valid_user_one_confirm_account_token))
         user = User.objects.get(pk=saved_valid_user_one.pk)
         assert response.status_code == 302
-        assert response.url == f'http://{TEST_HOST_NAME}/login'
+        assert response.url.startswith(f'http://{TEST_HOST_NAME}/login')
         assert user.verified is True

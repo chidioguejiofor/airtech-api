@@ -32,7 +32,8 @@ valid_json_user = {
     "lastName": "John",
     "email": "jsonUser2@email.com",
     "gender": "female",
-    "password": "password"
+    "password": "password",
+    "callbackURL": "http://test.com"
 }
 
 valid_admin_user = {
@@ -42,5 +43,6 @@ valid_admin_user = {
     "email": "admin@email.com",
     "gender": "male",
     "password": "password",
-    "admin": True
+    "admin": True,
+    "verified": True,
 }

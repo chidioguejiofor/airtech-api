@@ -1,0 +1,213 @@
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css?family=Arvo|Fjalla+One|Open+Sans:300,300i,400,400i,600,600i,700,700i,800" rel="stylesheet">
+    <link href="https://www.wfonts.com/download/data/2016/06/22/rockwell/ROCK.TTF", rel="stylesheet">
+    <style>
+
+        table{
+            width: 100%;
+        }
+        table thead{
+            display:block;
+            width: 100%;
+            color: white;
+            background-color: #BD2B2B;
+            font-size: 36px;
+
+            text-align: center;
+            padding: 0.3em;
+            font-weight: 100;
+            margin-bottom: 40px;
+
+        }
+        th{
+            width: 100%;
+            text-align: center;
+            padding: 0.6em 0.48em ;
+             font-family: Rockwell, 'Arvo', Courier Bold,Courier,Georgia,Times,Times New Roman,serif;;
+            font-weight: 100;
+        }
+        .empty{
+            height: 10px;
+        }
+
+        .table-heading{
+            width: 100%;
+            color: white;
+            background-color: #BD2B2B;
+            font-size: 36px;
+            font-family: Rockwell, sans-serif;
+            padding: 0.3em;
+            font-weight: 200;
+        }
+
+
+        .text{
+           font-family: 'Open Sans', sans-serif;
+            color: white;
+            font-size: 24px;
+             padding:1em 0 3em;
+            font-weight: 100;
+
+        }
+
+        .text td{
+            padding-left: 30%;
+
+        }
+        .first-text{
+            padding-bottom: 5em;
+        }
+        .body-title{
+            font-family: 'Fjalla One', Arial, sans-serif;
+            color: white;
+            text-align: center;
+            font-size: 2.75em;
+            font-weight: 500;
+            padding:1.4em 0 1em;
+        }
+
+        .link-btn{
+            display: block;
+            background-color: #B43131E0;
+
+            border: 0;
+            box-shadow: 1px 1px rgba(10,10,10,0.7);
+            width:30%;
+            font-size: 24px;
+            padding: 0.5em;
+            border-radius: 5px;
+            margin-top:2.5em;
+            margin-left: 35%;
+            font-family: 'Open Sans', sans-serif;
+            font-weight: 100;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .secondary-btn{
+             margin-top:0.5em;
+            background-color: #33964f;
+        }
+
+
+
+        .link-btn:hover{
+            background-color: #C43131E0;
+        }
+         .secondary-btn:hover{
+            background-color: #33a64f;
+             margin-bottom: 1em;
+        }
+        .link-btn:active{
+            border: 0;
+        }
+
+        .line-btn{
+            width: auto;
+            display: inline;
+            margin:0;
+            margin-right: 30px;
+        }
+
+
+        .link-btn:visited{
+            border:0;
+            border-collapse: collapse;
+        }
+
+
+    </style>
+</head>
+<body style="
+    background-image: url('https://images.unsplash.com/photo-1533942295064-8cfcfee30ac7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&w=1950&q=80');
+    min-height: 100vh;
+    background-position: center center;
+    background-repeat: no-repeat;
+    padding: 0;
+    margin:0;
+">
+        <div >
+        </div>
+        <div style="
+            min-height:100vh;
+            width:100%;
+            background-color: #232323BD;
+            z-index: -10;
+        ">
+             <table align="center" width="100%" cellpadding="0" cellspacing="0">
+             <tr class="table-heading">
+                <th  >Airtech Flight Reservation. Inc</th>
+            </tr>
+
+        <tbody>
+            <tr>
+
+            </tr>
+             <tr>
+
+            </tr>
+            <tr>
+                <td class="body-title">Admin Request</td>
+            </tr>
+            <tr>
+
+            </tr>
+            <tr>
+
+            </tr>
+
+            <tr class="text first-text">
+                 <td>{{first_name}} {{last_name}} is trying to become an admin</td>
+            </tr>
+
+            <tr class="empty">
+            </tr>
+            <tr class="text" >
+                   <td>
+                       <div style="
+                        left: 30%;
+                        background-color: white;
+                        min-height:50vh;
+                        width: 50vh;
+                        background-image: url('{{profile_picture}}');
+                        background-repeat: no-repeat;
+                        background-size: cover;
+                        margin-left: 8%;
+
+
+">
+                       </div>
+                   </td>
+            </tr>
+
+
+            <tr>
+
+            </tr>
+            <tr>
+                <td >
+                    <div style="
+
+                    margin-left: 35%;
+                    margin-top: 2%;
+                      margin-bottom: 5%
+"
+                    >
+                        <a class="link-btn secondary-btn line-btn" href="{{confirm_link}}" target="_blank" style="color: white;" >
+                            Accept Request
+                        </a>
+                        <a class="link-btn line-btn" href="mailto:{{user_email}}" target="_blank" style="color: white;" >
+                            Email User
+                        </a>
+
+
+                    </div>
+
+                </td>
+            </tr>
+        </tbody>
+    </table>
+        </div>
+
+</body>
