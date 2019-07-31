@@ -16,13 +16,14 @@ class FlightTaskSet(TaskSet):
     """Booking Actions."""
 
     auth_token = ''
+    flight_id = ''
 
     def on_start(self):
         """Method to run on start."""
         response = self.client.post(
             '/auth/login',
             json={
-                "usernameOrEmail": "regulartest@gmail.com",
+                "usernameOrEmail": "regulartest@email.com",
                 "password": "password"
             },
             headers={'Content-Type': 'application/json'})
@@ -31,20 +32,38 @@ class FlightTaskSet(TaskSet):
         response = self.client.post(
             '/auth/login',
             json={
-                "usernameOrEmail": "regulartest@gmail.com",
+                "usernameOrEmail": "regularadmintest@email.com",
                 "password": "password"
             },
             headers={'Content-Type': 'application/json'})
         self.admin_token = json.loads(response.text)['data']['token']
 
     @task
-    def get_flight(self):
-        """Task to get user filghts."""
-        self.client.get('/flights',
-                        headers={'Authorization': 'Bearer ' + self.auth_token})
+    def created_flight(self):
+        data = {
+            "capacity": 70,
+            "location": "Popo York",
+            "destination": "Lagos, Nigeria",
+            "schedule": "2019-10-10 14:00:01",
+            "currentPrice": 4000,
+            "type": "international"
+        }
+
+        response = self.client.post(
+            '/flights',
+            json=data,
+            headers={'Authorization': 'Bearer ' + self.admin_token})
+
+        self.flight_id = json.loads(response.text)['data']['id']
 
     @task
     def get_flight(self):
+        """Task to get user filghts."""
+        self.client.get(f'/flights/{self.flight_id}',
+                        headers={'Authorization': 'Bearer ' + self.auth_token})
+
+    @task
+    def get_flights(self):
         """Task to get user filghts."""
         self.client.get('/flights',
                         headers={'Authorization': 'Bearer ' + self.auth_token})
