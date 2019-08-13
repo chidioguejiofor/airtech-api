@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = ">=2.2.3"
+django = ">=2.2.4"
 djangorestframework = "*"
 dj-database-url = "*"
 "psycopg2" = "==2.7.4"

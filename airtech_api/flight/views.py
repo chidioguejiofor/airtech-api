@@ -35,7 +35,20 @@ class FlightView(APIView):
 
     @staticmethod
     def get(request):
-        queryset = Flight.objects.order_by('-schedule')
+        expired_query = request.query_params.get('expired', '').lower()
+
+        expired_mapper = {
+            'false': {
+                'schedule__lt': timezone.now()
+            },
+            'true': {
+                'schedule__gte': timezone.now()
+            }
+        }
+
+        filter_kwargs = expired_mapper.get(expired_query, {})
+        queryset = Flight.objects.filter(**filter_kwargs).order_by('-schedule')
+
         paginator, page = parse_paginator_request_query(
             request.query_params, queryset)
         meta, current_page_data = generate_pagination_meta(paginator, page)
