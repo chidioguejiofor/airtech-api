@@ -1,10 +1,10 @@
 from rest_framework import serializers
+from django.utils import timezone
+from datetime import timedelta
 from .models import Flight
 from ..utils.helpers.json_helpers import raise_error
 from ..utils.error_messages import serialization_errors
 from ..utils.helpers.serializer_helpers import UpdateableSerializer
-from django.utils import timezone
-from datetime import timedelta
 
 
 class FlightSerializer(UpdateableSerializer):

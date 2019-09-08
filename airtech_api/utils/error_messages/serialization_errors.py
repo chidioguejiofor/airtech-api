@@ -65,4 +65,6 @@ msg_dict = {
     'This endpoint is for only regular users',
     'profile_not_updated':
     'You need to update your profile picture before you can do this',
+    'only_alpha_and_numbers':
+    'This field can contain only alphabets and numbers'
 }

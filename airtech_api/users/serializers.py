@@ -4,6 +4,7 @@ from ..utils.helpers.serializer_helpers import get_unique_validator
 from .models import User
 from ..utils.helpers.json_helpers import raise_error
 from ..utils.error_messages import serialization_errors
+from ..utils import custom_serializers
 
 
 class LoginSerializer(serializers.Serializer):
@@ -25,11 +26,13 @@ class LoginSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    firstName = serializers.CharField(source='first_name', required=True)
-    lastName = serializers.CharField(source='last_name', required=True)
+    firstName = custom_serializers.Alphanumeric(source='first_name',
+                                                required=True)
+    lastName = custom_serializers.Alphanumeric(source='last_name',
+                                               required=True)
     password = serializers.CharField(write_only=True)
     gender = serializers.CharField()
-    username = serializers.CharField(validators=[
+    username = custom_serializers.Alphanumeric(validators=[
         get_unique_validator(User, 'username'),
     ])
     imageUrl = serializers.URLField(source='image_url', required=False)
