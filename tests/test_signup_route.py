@@ -111,6 +111,30 @@ class TestSignupRoute:
         assert response.status_code == 400
         assert response_body['status'] == 'error'
 
+    def test_signup_with_username_field_containing_symbols_fails(self, client):
+        """Should return a welcome message to the user on GET /api
+
+
+        Returns:
+            None
+        """
+        send_mail_as_html.delay = Mock(side_effect=send_mail_as_html)
+        smtplib.SMTP = Mock()
+        json_user = dict(**valid_json_user)
+        json_user['username'] = '!!@*(@(name'
+        response = client.post(SIGNUP_ENDPOINT,
+                               data=json_user,
+                               content_type="application/json")
+        response_body = response.data
+
+        assert response.status_code == 400
+        assert 'data' not in response_body
+        assert response_body['status'] == 'error'
+        assert response_body['message'] == serialization_errors[
+            'many_invalid_fields']
+        assert response_body['errors']['username'][0] == serialization_errors[
+            'only_alpha_and_numbers']
+
     def test_signup_with_gender_eq_male_succeeds(self, client):
         """Should return a welcome message to the user on GET /api
 
